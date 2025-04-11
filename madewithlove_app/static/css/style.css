@@ -124,6 +124,12 @@ body {
   .dashboard-table img {
     border-radius: 6px;
   }
+
+  .loginreg{
+    display: flex;
+  }
+
+
   
   /* Dashboard Modal */
   .dashboard-modal {
