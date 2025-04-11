@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container" style="max-width: 500px; margin-top: 50px;">
+    <h2 class="text-center mb-4">Subscribe to {{ plan|title }} Plan</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group mb-3">
+            <label for="card_name">Name on Card</label>
+            <input type="text" class="form-control" id="card_name" name="card_name" required>
+        </div>
+        <div class="form-group mb-3">
+            <label for="card_number">Card Number</label>
+            <input type="text" class="form-control" id="card_number" name="card_number" required>
+        </div>
+        <div class="row mb-3">
+            <div class="col">
+                <label for="expiry_date">Expiry Date</label>
+                <input type="text" class="form-control" id="expiry_date" name="expiry_date" placeholder="MM/YY" required>
+            </div>
+            <div class="col">
+                <label for="cvv">CVV</label>
+                <input type="text" class="form-control" id="cvv" name="cvv" required>
+            </div>
+        </div>
+        <input type="hidden" name="plan" value="{{ plan }}">
+        <button type="submit" class="btn btn-primary w-100">Subscribe Now</button>
+    </form>
+</div>
+{% endblock %}

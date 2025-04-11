@@ -17,5 +17,5 @@ urlpatterns = [
     path('dashboard/merchant/', views.merchant_dashboard, name='merchant_dashboard'),
     path('dashboard/customer/', views.customer_dashboard, name='customer_dashboard'),
     path("dashboard/add-edit-product/", views.add_or_edit_product, name="add_product"),
-    
+    path('subscribe/', views.subscribe_view, name='subscribe'),
     ]

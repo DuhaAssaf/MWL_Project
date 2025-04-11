@@ -341,3 +341,15 @@ def admin_dashboard_view(request):
     return render(request, 'admin_dashboard.html')
 
 
+# this code to subscribe 
+def subscribe_view(request):
+    plan = request.GET.get('plan', 'Basic')
+    if request.method == 'POST':
+        # هون بتتعامل مع البيانات (ممكن تحفظ أو ترسلها لبوابة دفع)
+        name = request.POST.get('card_name')
+        number = request.POST.get('card_number')
+        expiry = request.POST.get('expiry_date')
+        cvv = request.POST.get('cvv')
+        # امثلة: print أو redirect أو رسالة نجاح
+        print(f"Subscribed to {plan}: {name}, {number}, {expiry}, {cvv}")
+    return render(request, 'subscribe.html', {'plan': plan})

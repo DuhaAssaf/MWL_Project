@@ -20,7 +20,9 @@
                 <li>✅ {{ feature }}</li>
                 {% endfor %}
             </ul>
-            <a href="{% url 'register' %}" class="btn w-100 plan-btn">{{ plan.cta }}</a>
+            {% comment %} <a href="{% url 'register' %}" class="btn w-100 plan-btn">{{ plan.cta }}</a> {% endcomment %}
+            <a href="{% url 'subscribe' %}?plan=Basic" class="btn btn-primary">Get Started</a>
+
             </div>
         </div>
         </div>
