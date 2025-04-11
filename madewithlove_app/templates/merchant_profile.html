@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile | Made With Love{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div class="text-center mb-5">
+    <h2 class="fw-bold">My Merchant Profile</h2>
+    <p class="text-muted">Review your account setup and payout info.</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+    <!-- Store Info -->
+    <div class="col-md-6">
+        <div class="card p-4 profile-card">
+        <h5 class="mb-3 text-primary">🛍️ Store Info</h5>
+        <p><strong>Store Name:</strong> {{ profile.store_name }}</p>
+        <p><strong>Category:</strong> {{ profile.category }}</p>
+        <p><strong>Description:</strong> {{ profile.bio }}</p>
+        </div>
+    </div>
+
+    <!-- Payout Info -->
+    <div class="col-md-6">
+        <div class="card p-4 profile-card">
+        <h5 class="mb-3 text-primary">💸 Payout Details</h5>
+        <p><strong>Method:</strong> {{ profile.payment_provider }}</p>
+        <p><strong>Email / Account:</strong> {{ profile.payout_email }}</p>
+        <p><strong>Country:</strong> {{ profile.country }}</p>
+        <p><strong>Uploaded ID:</strong><br>
+            <img src="{{ profile.id_upload.url|default:'https://via.placeholder.com/200x120' }}" 
+            alt="Uploaded ID" 
+            class="img-fluid rounded mt-2" />
+        </p>
+        </div>
+    </div>
+    </div>
+
+    <div class="text-center mt-4">
+    <a href="{% url 'merchant_setup' %}" class="btn btn-warning px-4">Edit Profile</a>
+    </div>
+    <div class="text-center mt-3">
+    <a href="{% url 'storefront_by_slug' slug='handmade-creations' %}" class="btn btn-outline-primary px-4">
+    Visit My Storefront
+    </a>
+</div>
+</section>
+{% endblock %}

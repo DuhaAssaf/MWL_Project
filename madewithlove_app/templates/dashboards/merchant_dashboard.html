@@ -1,0 +1,115 @@
+<!-- merchant_dashboard.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="row g-0">
+          <div class="col-md-4">
+            <img src="{{ profile.store_logo.url|default:'/static/images/default-store.png' }}" class="img-fluid rounded-start" alt="Store Logo">
+          </div>
+          <div class="col-md-8">
+            <div class="card-body">
+              <h5 class="card-title">{{ profile.store_name }}</h5>
+              <p class="card-text mb-1"><i class="bi bi-tags"></i> <strong>Category:</strong> {{ profile.category }}</p>
+              <p class="card-text mb-1"><i class="bi bi-geo-alt"></i> <strong>Country:</strong> {{ profile.country }}</p>
+              <p class="card-text"><i class="bi bi-check-circle"></i> <strong>Status:</strong> 
+                <span class="badge {{ profile.is_approved|yesno:'bg-success,bg-secondary' }}">
+                  {{ profile.is_approved|yesno:"Approved,Pending" }}
+                </span>
+              </p>
+              <p class="card-text text-muted small">Manage your store, add products, and track performance below.</p>
+            </div>
+          </div>
+        </div>
+      </div>  </div>
+
+  <div class="table-responsive">
+    <table class="table table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th>Image</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="product-table">
+        {% for product in products %}
+        <tr data-name="{{ product.name }}" data-category="{{ product.category.name }}">
+          <td>
+            {% for img in product.images.all %}
+              <img src="{{ img.image.url }}" width="50" class="img-thumbnail me-1" />
+            {% endfor %}
+          </td>
+          <td>{{ product.name }}</td>
+          <td>{{ product.category }}</td>
+          <td>${{ product.price }}</td>
+          <td>{{ product.stock }}</td>
+          <td>
+            <button class="btn btn-sm btn-warning edit-btn" data-id="{{ product.id }}">Edit</button>
+            <button class="btn btn-sm btn-danger delete-btn" data-id="{{ product.id }}">Delete</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p id="pagination-info" class="text-muted text-end"></p>
+    <div class="d-flex justify-content-between">
+      <button id="prev-page" class="btn btn-outline-secondary">Previous</button>
+      <button id="next-page" class="btn btn-outline-secondary">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- Product Modal -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form id="product-form" method="post" enctype="multipart/form-data" action="{% url 'add_product' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="productModalLabel">Add/Edit Product</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body row g-3">
+          <input type="hidden" name="product_id" id="edit-product-id">
+          <div class="col-md-6">
+            <label>Name</label>
+            <input type="text" name="name" id="product-name" class="form-control" required />
+          </div>
+          <div class="col-md-6">
+            <label>Price</label>
+            <input type="number" name="price" step="0.01" id="product-price" class="form-control" required />
+          </div>
+          <div class="col-md-6">
+            <label>Stock</label>
+            <input type="number" name="stock" id="product-stock" class="form-control" required />
+          </div>
+          <div class="col-md-6">
+            <label>Category</label>
+            <select name="category" id="product-category" class="form-select" required>
+              {% for cat in categories %}
+                <option value="{{ cat.id }}">{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-12">
+            <label>Description</label>
+            <textarea name="description" id="product-description" class="form-control" rows="3" required></textarea>
+          </div>
+          <div class="col-12">
+            <label>Images</label>
+            <input type="file" name="images" id="product-image" class="form-control" multiple />
+            <img id="image-preview" style="max-width: 100px; display: none;" class="mt-2" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

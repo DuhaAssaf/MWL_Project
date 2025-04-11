@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-center mb-4">Create Your Account</h2>
+  
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+  {% if success %}
+    <div class="alert alert-success">{{ success }}</div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="text" name="username" placeholder="Username" class="form-control mb-3" required>
+
+    <input type="text" name="full_name" placeholder="Full Name" class="form-control mb-3" required>
+
+    <select name="role" class="form-select mb-3" required>
+      <option value="">Select Role</option>
+      <option value="merchant">Merchant</option>
+      <option value="customer">Customer</option>
+    </select>
+
+    <input type="email" name="email" placeholder="Email" class="form-control mb-3" required>
+    <input type="text" name="phone_number" placeholder="Phone Number" class="form-control mb-3">
+
+    <input type="password" name="password1" placeholder="Password" class="form-control mb-3" required>
+    <input type="password" name="password2" placeholder="Confirm Password" class="form-control mb-3" required>
+
+    <button type="submit" class="btn btn-primary w-100">Register</button>
+  </form>
+</div>
+{% endblock %}
