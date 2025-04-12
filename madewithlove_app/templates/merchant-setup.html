@@ -1,33 +1,22 @@
-{% extends "base.html" %} {% load static %} {% block content %}
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
 <div class="container py-5">
   <div class="row justify-content-center">
-    <div class="col-lg-10">
-      <div class="card shadow-lg border-0 glass-effect p-4">
-        <h2 class="text-center fw-bold mb-4">Set Up Your Store</h2>
+    <div class="col-md-8">
+      <div class="card auth-card shadow border-0 p-4">
+        <h3 class="text-center form-title mb-4">Merchant Profile Setup</h3>
 
-        <form method="post" class="row g-4">
+        <form method="post">
           {% csrf_token %}
 
-          <!-- Store Name -->
-          <div class="col-md-6">
-            <label for="store_name" class="form-label"
-              ><i class="bi bi-shop"></i> Store Name</label
-            >
-            <input
-              type="text"
-              name="store_name"
-              id="store_name"
-              class="form-control"
-              placeholder="Your store name"
-              required
-            />
+          <div class="mb-3">
+            <label for="store_name" class="form-label">Store Name</label>
+            <input type="text" name="store_name" id="store_name" class="form-control" required>
           </div>
 
-          <!-- Category -->
-          <div class="col-md-6">
-            <label for="category" class="form-label"
-              ><i class="bi bi-tags"></i> Category</label
-            >
+          <div class="mb-3">
+            <label for="category" class="form-label">Category</label>
             <select name="category" id="category" class="form-select" required>
               <option value="">Select Category</option>
               {% for cat in categories %}
@@ -36,92 +25,33 @@
             </select>
           </div>
 
-          <!-- Description -->
-          <div class="col-12">
-            <label for="description" class="form-label"
-              ><i class="bi bi-card-text"></i> Description</label
-            >
-            <textarea
-              name="description"
-              id="description"
-              rows="3"
-              class="form-control"
-              placeholder="Describe your store"
-              required
-            ></textarea>
+          <div class="mb-3">
+            <label for="description" class="form-label">Store Description</label>
+            <textarea name="description" id="description" rows="3" class="form-control" required></textarea>
           </div>
 
-          <!-- Payout Method -->
-          <div class="col-md-6">
-            <label for="payout_method" class="form-label"
-              ><i class="bi bi-currency-exchange"></i> Payout Method</label
-            >
-            <input
-              type="text"
-              name="payout_method"
-              id="payout_method"
-              class="form-control"
-              placeholder="e.g. PayPal, Bank Transfer"
-              required
-            />
+          <div class="mb-3">
+            <label for="payout_method" class="form-label">Payout Method</label>
+            <input type="text" name="payout_method" id="payout_method" class="form-control" placeholder="e.g., PayPal, Bank Transfer" required>
           </div>
 
-          <!-- Payout Email -->
-          <div class="col-md-6">
-            <label for="payout_email" class="form-label"
-              ><i class="bi bi-envelope-at"></i> Payout Email</label
-            >
-            <input
-              type="email"
-              name="payout_email"
-              id="payout_email"
-              class="form-control"
-              placeholder="you@example.com"
-              required
-            />
+          <div class="mb-3">
+            <label for="payout_email" class="form-label">Payout Email</label>
+            <input type="email" name="payout_email" id="payout_email" class="form-control" required>
           </div>
 
-          <!-- Country -->
-          <div class="col-md-6">
-            <label for="country" class="form-label"
-              ><i class="bi bi-geo-alt"></i> Country</label
-            >
-            <input
-              type="text"
-              name="country"
-              id="country"
-              class="form-control"
-              placeholder="Your country"
-              required
-            />
+          <div class="mb-3">
+            <label for="country" class="form-label">Country</label>
+            <input type="text" name="country" id="country" class="form-control" required>
           </div>
 
-          <!-- Submit -->
-          <div class="col-12 text-end">
-            <button type="submit" class="btn btn-primary px-4 py-2">
-              <i class="bi bi-check-circle me-1"></i> Save Profile
-            </button>
+          <div class="d-grid">
+            <button type="submit" class="btn save-product-btn">Save Profile</button>
           </div>
         </form>
+
       </div>
     </div>
   </div>
 </div>
-
-<style>
-  .glass-effect {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 1rem;
-    backdrop-filter: blur(6px);
-  }
-
-  .form-label i {
-    color: #0d6efd;
-    margin-right: 6px;
-  }
-
-  .btn-primary:hover {
-    background-color: #0b5ed7;
-  }
-</style>
 {% endblock %}
