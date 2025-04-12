@@ -48,7 +48,7 @@
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="navbarUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <img src="{% if profile_picture_url %}{{ profile_picture_url }}{% else %}{% static 'images/default-profile.png' %}{% endif %}"
-                     alt="Profile" width="32" height="32" class="rounded-circle" style="object-fit: cover;">
+                  alt="Profile" width="32" height="32" class="rounded-circle" style="object-fit: cover;">
                 {{ request.session.username|default:"User" }}
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
