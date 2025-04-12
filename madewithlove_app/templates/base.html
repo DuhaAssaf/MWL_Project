@@ -48,7 +48,7 @@
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="navbarUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <img src="{% if profile_picture_url %}{{ profile_picture_url }}{% else %}{% static 'images/default-profile.png' %}{% endif %}"
-                      alt="Profile" width="32" height="32" class="rounded-circle" style="object-fit: cover;">
+                  alt="Profile" width="32" height="32" class="rounded-circle" style="object-fit: cover;">
                 {{ request.session.username|default:"User" }}
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
@@ -96,11 +96,7 @@
             <li><a href="{% url 'home' %}" class="footer-link text-light">Home</a></li>
             <li><a href="{% url 'plans' %}" class="footer-link text-light">Plans</a></li>
             <li><a href="{% url 'login' %}" class="footer-link text-light">Login</a> / <a href="{% url 'register' %}" class="footer-link text-light">Register</a></li>
-            {% if request.session.user_id %}
-                <li><a href="{% url 'my_profile' %}" class="footer-link text-light">My Profile</a></li>
-            {% endif %}
-
-
+            <li><a href="{% url 'merchant_profile' %}" class="footer-link text-light">My Profile</a></li>
           </ul>
         </div>
 

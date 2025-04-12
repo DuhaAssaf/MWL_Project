@@ -343,3 +343,14 @@ def admin_dashboard_view(request):
     return render(request, 'admin_dashboard.html')
 
 
+def my_profile_redirect(request):
+    if not request.session.get('user_id'):
+        return redirect('login')
+
+    role = request.session.get('role')
+    if role == 'merchant':
+        return redirect('merchant_profile')
+    elif role == 'customer':
+        return redirect('customer_profile')
+    else:
+        return redirect('home')
