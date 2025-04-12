@@ -8,6 +8,8 @@ from .models import ProductImage, User, MerchantProfile, CustomerProfile, Subscr
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
+from django.views.decorators.http import require_http_methods
+
 
 def homepage(request):
     return render(request, 'homepage.html')
@@ -225,7 +227,7 @@ def customer_dashboard(request):
     except User.DoesNotExist:
         return redirect('login')
 
-
+@require_http_methods(["GET", "POST"])
 def login_view(request):
     if request.method == 'POST':
         identifier = request.POST.get('username')  # Username or email
@@ -236,13 +238,13 @@ def login_view(request):
 
         if user:
             if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
-                # ✅ Set session info
+                #  Set session info
                 request.session['user_id'] = user.id
                 request.session['username'] = user.username
                 request.session['full_name'] = user.full_name
                 request.session['role'] = user.role
 
-                # ✅ Set profile picture URL
+                #  Set profile picture URL
                 default_url = '/static/img/default-profile.png'
                 profile_url = None
 
@@ -254,28 +256,28 @@ def login_view(request):
                     profile = CustomerProfile.objects.filter(user=user).first()
                     if profile and profile.profile_picture:
                         profile_url = profile.profile_picture.url
-
+                
                 request.session['profile_picture_url'] = profile_url or default_url
 
-                # ✅ Set session expiry
+                #  Set session expiry
                 if remember_me:
                     request.session.set_expiry(1209600)  # 2 weeks
                 else:
                     request.session.set_expiry(0)  # Session expires on browser close
 
-                # ✅ Redirect based on role
+                #  Redirect based on role
                 if user.role == 'merchant':
                     return redirect('merchant_dashboard')
                 elif user.role == 'customer':
                     return redirect('explore')  # All stores page
-
+                else:
+                    return redirect('home')
             else:
                 return render(request, 'login.html', {'error': 'Invalid password.'})
         else:
             return render(request, 'login.html', {'error': 'User not found.'})
 
     return render(request, 'login.html')
-
 
 def logout_view(request):
     request.session.flush()
@@ -341,3 +343,14 @@ def admin_dashboard_view(request):
     return render(request, 'admin_dashboard.html')
 
 
+def my_profile_redirect(request):
+    if not request.session.get('user_id'):
+        return redirect('login')
+
+    role = request.session.get('role')
+    if role == 'merchant':
+        return redirect('merchant_profile')
+    elif role == 'customer':
+        return redirect('customer_profile')
+    else:
+        return redirect('home')
