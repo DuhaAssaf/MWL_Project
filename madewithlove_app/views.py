@@ -36,31 +36,43 @@ def subscriptions(request):
 def explore(request):
     return render(request, 'explore.html')
 
-# @login_required
+@login_required
 def merchant_setup_view(request):
+
+    print("User:", request.user, "| Authenticated:", request.user.is_authenticated)
     user = request.user
-    # profile = MerchantProfile.objects.filter(user=user).first()
+    profile, created = MerchantProfile.objects.get_or_create(user=user)
 
-    # if not profile:
-    #     return redirect("dashboard")
+    if request.method == 'POST':
+        store_name = request.POST.get('store_name')
+        category_id = request.POST.get('category')
+        description = request.POST.get('description')
+        payout_method = request.POST.get('payout_method')
+        payout_email = request.POST.get('payout_email')
+        country = request.POST.get('country')
+        profile_picture = request.FILES.get('profile_picture')
 
-    # if request.method == "POST":
-    #     profile.store_name = request.POST.get("store_name")
-    #     profile.category_id = request.POST.get("category")
-    #     profile.description = request.POST.get("description")
-    #     profile.payout_method = request.POST.get("payout_method")
-    #     profile.payout_email = request.POST.get("payout_email")
-    #     profile.country = request.POST.get("country")
-    #     profile.save()
+        if not all([store_name, category_id, description, payout_method, payout_email, country]):
+            return render(request, 'merchant-setup.html', {
+                'error': 'All fields are required.',
+                'categories': Category.objects.all()
+            })
 
-    #     return redirect("dashboard")
-    return render(request,"merchant_profile.html")
+        profile.store_name = store_name
+        profile.category_id = category_id
+        profile.description = description
+        profile.payout_method = payout_method
+        profile.payout_email = payout_email
+        profile.country = country
+        profile.profile_picture = profile_picture if profile_picture else profile.profile_picture
+        profile.is_profile_complete = True
+        profile.save()
+
+        return redirect('merchant_dashboard')
 
     categories = Category.objects.all()
-    return render(request, "merchant_setup_form.html", {
-        "categories": categories,
-        "profile": profile,
-    })
+    return render(request, 'merchant-setup.html', {'categories': categories})
+
 def contact(request):
     return render(request, 'contact.html')
 
@@ -230,58 +242,56 @@ def customer_dashboard(request):
 
 def login_view(request):
     if request.method == 'POST':
-        identifier = request.POST.get('username')  # Username or email
+        identifier = request.POST.get('username')  # Username or Email
         password = request.POST.get('password')
         remember_me = request.POST.get('remember_me') == 'on'
 
         user = User.objects.filter(username=identifier).first() or User.objects.filter(email=identifier).first()
 
-        if user:
-            if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
-                # ✅ Set session info
-                request.session['user_id'] = user.id
-                request.session['username'] = user.username
-                request.session['full_name'] = user.full_name
-                request.session['role'] = user.role
+        if user and bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
+            login(request, user)
+            # ✅ Set session values
+            request.session['user_id'] = user.id
+            request.session['username'] = user.username
+            request.session['full_name'] = user.full_name
+            request.session['role'] = user.role
 
-                # ✅ Set profile picture URL
-                default_url = '/static/img/default-profile.png'
-                profile_url = None
+            # ✅ Handle profile picture
+            default_url = '/static/img/default-profile.png'
+            profile_url = None
 
-                if user.role == 'merchant':
-                    profile = MerchantProfile.objects.filter(user=user).first()
-                    if profile and profile.profile_picture:
-                        profile_url = profile.profile_picture.url
-                elif user.role == 'customer':
-                    profile = CustomerProfile.objects.filter(user=user).first()
-                    if profile and profile.profile_picture:
-                        profile_url = profile.profile_picture.url
+            if user.role == 'merchant':
+                profile = MerchantProfile.objects.filter(user=user).first()
+                if profile and profile.profile_picture:
+                    profile_url = profile.profile_picture.url
 
                 request.session['profile_picture_url'] = profile_url or default_url
 
-                # ✅ Set session expiry
-                if remember_me:
-                    request.session.set_expiry(1209600)  # 2 weeks
-                else:
-                    request.session.set_expiry(0)  # Session expires on browser close
+                # ✅ Merchant: check profile completion
+                if not profile or not profile.is_profile_complete:
+                    return redirect('merchant_setup')
+                return redirect('merchant_dashboard')
 
-                # ✅ Redirect based on role
-                if user.role == 'merchant':
-                    profile = MerchantProfile.objects.filter(user=user).first()
-                    if not profile or not profile.is_profile_complete:
-                        return redirect('merchant_setup')
-                    else:
-                        return redirect('merchant_dashboard')
+            elif user.role == 'customer':
+                profile = CustomerProfile.objects.filter(user=user).first()
+                if profile and profile.profile_picture:
+                    profile_url = profile.profile_picture.url
 
-                elif user.role == 'customer':
-                    return redirect('explore')
-            else:
-                return render(request, 'login.html', {'error': 'Invalid password.'})
-        else:
-            return render(request, 'login.html', {'error': 'User not found.'})
+                request.session['profile_picture_url'] = profile_url or default_url
+                return redirect('explore')
+
+            elif user.role == 'admin':
+                return redirect('/admin/')  # Optional: or use custom admin dashboard
+
+            # Fallback (safety net)
+            return redirect('login')
+
+        # Invalid password or user not found
+        error_message = 'Invalid password.' if user else 'User not found.'
+        return render(request, 'login.html', {'error': error_message})
 
     return render(request, 'login.html')
-
 
 def logout_view(request):
     request.session.flush()
