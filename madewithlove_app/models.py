@@ -36,6 +36,7 @@ class MerchantProfile(models.Model):
     payout_method = models.CharField(max_length=50)
     payout_email = models.EmailField()
     country = models.CharField(max_length=100)
+    is_profile_complete = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

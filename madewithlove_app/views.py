@@ -8,6 +8,7 @@ from .models import ProductImage, User, MerchantProfile, CustomerProfile, Subscr
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import login
 
 def homepage(request):
     return render(request, 'homepage.html')
@@ -35,24 +36,25 @@ def subscriptions(request):
 def explore(request):
     return render(request, 'explore.html')
 
-@login_required
+# @login_required
 def merchant_setup_view(request):
     user = request.user
-    profile = MerchantProfile.objects.filter(user=user).first()
+    # profile = MerchantProfile.objects.filter(user=user).first()
 
-    if not profile:
-        return redirect("dashboard")
+    # if not profile:
+    #     return redirect("dashboard")
 
-    if request.method == "POST":
-        profile.store_name = request.POST.get("store_name")
-        profile.category_id = request.POST.get("category")
-        profile.description = request.POST.get("description")
-        profile.payout_method = request.POST.get("payout_method")
-        profile.payout_email = request.POST.get("payout_email")
-        profile.country = request.POST.get("country")
-        profile.save()
+    # if request.method == "POST":
+    #     profile.store_name = request.POST.get("store_name")
+    #     profile.category_id = request.POST.get("category")
+    #     profile.description = request.POST.get("description")
+    #     profile.payout_method = request.POST.get("payout_method")
+    #     profile.payout_email = request.POST.get("payout_email")
+    #     profile.country = request.POST.get("country")
+    #     profile.save()
 
-        return redirect("dashboard")
+    #     return redirect("dashboard")
+    return render(request,"merchant_profile.html")
 
     categories = Category.objects.all()
     return render(request, "merchant_setup_form.html", {
@@ -265,10 +267,14 @@ def login_view(request):
 
                 # ✅ Redirect based on role
                 if user.role == 'merchant':
-                    return redirect('merchant_dashboard')
-                elif user.role == 'customer':
-                    return redirect('explore')  # All stores page
+                    profile = MerchantProfile.objects.filter(user=user).first()
+                    if not profile or not profile.is_profile_complete:
+                        return redirect('merchant_setup')
+                    else:
+                        return redirect('merchant_dashboard')
 
+                elif user.role == 'customer':
+                    return redirect('explore')
             else:
                 return render(request, 'login.html', {'error': 'Invalid password.'})
         else:

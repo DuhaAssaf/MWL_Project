@@ -202,3 +202,11 @@ document.addEventListener("DOMContentLoaded", function () {
   updateCategoryDropdown();
   applyFilters();
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+  if (typeof redirectUrl !== "undefined") {
+      setTimeout(function () {
+          window.location.href = redirectUrl;
+      }, 3000);
+  }
+});
