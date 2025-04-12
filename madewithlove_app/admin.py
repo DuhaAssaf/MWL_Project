@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    User, MerchantProfile, CustomerProfile, Store,
+    User, MerchantProfile, CustomerProfile,
     Product, ProductImage, Category, Order, OrderItem,
     Review, Notification, Discount, Subscription, RecentlyViewedProduct
 )
@@ -25,16 +25,10 @@ class CustomerProfileAdmin(admin.ModelAdmin):
     search_fields = ('user__username',)
 
 
-@admin.register(Store)
-class StoreAdmin(admin.ModelAdmin):
-    list_display = ('merchant', 'slug', 'is_active', 'created_at')
-    list_filter = ('is_active',)
-    search_fields = ('merchant__store_name', 'slug')
-
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'store', 'category', 'price', 'stock', 'is_active', 'created_at')
+    list_display = ('name', 'category', 'price', 'stock', 'is_active', 'created_at')
     list_filter = ('is_active', 'category')
     search_fields = ('name', 'store__merchant__store_name')
 

@@ -1,5 +1,6 @@
+from ast import Store
 import bcrypt
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.db import IntegrityError
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
@@ -11,6 +12,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from django.utils.text import slugify
 
 def homepage(request):
     return render(request, 'homepage.html')
@@ -23,8 +25,24 @@ def plans(request):
     ]
     return render(request, 'plans.html', {"plans": plans})
 
-def merchant_dashboard(request):
-    return render(request, 'dashboard.html')
+@login_required
+def merchant_dashboard_view(request):
+    user = request.user
+
+    # Get the merchant profile
+    profile = get_object_or_404(MerchantProfile, user=user)
+
+    # Get products related to this merchant's store
+    products = Product.objects.filter(store=profile.store).prefetch_related('images')
+
+    # Load fixed category list (choices-based)
+    categories = Category.objects.all()
+
+    return render(request, 'merchant_dashboard.html', {
+        'profile': profile,
+        'products': products,
+        'categories': categories
+    })
 
 def customer_dashboard(request):
     return HttpResponse("Welcome to the Customer Dashboard!")
@@ -54,6 +72,9 @@ def merchant_setup_view(request):
         payout_email = request.POST.get('payout_email', '').strip()
         country = request.POST.get('country', '').strip()
         profile_picture = request.FILES.get('profile_picture')
+        slug = slugify(store_name)
+        store_logo=request.POST.get('store_logo')
+
 
         # Backend Validation
         if len(store_name) < 5:
@@ -85,9 +106,11 @@ def merchant_setup_view(request):
             profile.country = country
             profile.profile_picture = profile_picture if profile_picture else profile.profile_picture
             profile.is_profile_complete = True
+            profile.slug=slug
+            profile.store_logo=store_logo
             profile.save()
             return redirect('merchant_dashboard')
-
+        
     return render(request, 'merchant-setup.html', {
         'categories': categories,
         'error': error,
@@ -199,7 +222,7 @@ def register_view(request):
         if User.objects.filter(email=email).exists():
             return render(request, 'register.html', {'error': 'Email already registered.'})
 
-        # Hash password using bcrypt
+        # Hash password
         hashed_password = bcrypt.hashpw(password1.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
         # Create user
@@ -212,35 +235,42 @@ def register_view(request):
             role=role,
         )
 
-        # Optionally, auto-login the user or set a success message
-        request.session['user_id'] = user.id  # Simple session-based login (optional)
+        user.backend = 'django.contrib.auth.backends.ModelBackend'
+        login(request, user)
 
-        # Redirect to appropriate dashboard
+        # ✅ Set session
+        request.session['user_id'] = user.id
+        request.session['username'] = user.username
+        request.session['full_name'] = user.full_name
+        request.session['role'] = user.role
+
+        default_url = '/static/img/default-profile.png'
+        profile_url = None
+
         if role == 'merchant':
+            # Create empty merchant profile if not exists
+            profile, created = MerchantProfile.objects.get_or_create(user=user)
+            if profile.profile_picture:
+                profile_url = profile.profile_picture.url
+            request.session['profile_picture_url'] = profile_url or default_url
+
+            if not profile.is_profile_complete:
+                return redirect('merchant_setup')
             return redirect('merchant_dashboard')
-        else:
-            return redirect('customer_dashboard')
+
+        elif role == 'customer':
+            profile, created = CustomerProfile.objects.get_or_create(user=user)
+            if profile.profile_picture:
+                profile_url = profile.profile_picture.url
+            request.session['profile_picture_url'] = profile_url or default_url
+            return redirect('explore')
+
+        return redirect('login')  # fallback
 
     return render(request, 'register.html')
 
 def merchant_dashboard(request):
-    user_id = request.session.get('user_id')
-    if not user_id:
-        return redirect('login')  # Redirect to login if not authenticated
-
-    try:
-        user = User.objects.get(id=user_id)
-        if user.role != 'merchant':
-            return redirect('customer_dashboard')
-
-        merchant_profile = MerchantProfile.objects.filter(user=user).first()
-        return render(request, 'dashboards/merchant_dashboard.html', {
-            'user': user,
-            'merchant_profile': merchant_profile,
-        })
-    except User.DoesNotExist:
-        return redirect('login')
-    
+    return render(request,'dashboards/merchant_dashboard.html')    
 
 def customer_dashboard(request):
     user_id = request.session.get('user_id')
