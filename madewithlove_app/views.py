@@ -9,6 +9,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 def homepage(request):
     return render(request, 'homepage.html')
@@ -38,40 +40,59 @@ def explore(request):
 
 @login_required
 def merchant_setup_view(request):
-
     print("User:", request.user, "| Authenticated:", request.user.is_authenticated)
     user = request.user
     profile, created = MerchantProfile.objects.get_or_create(user=user)
+    categories = Category.objects.all()
+    error = None
 
     if request.method == 'POST':
-        store_name = request.POST.get('store_name')
-        category_id = request.POST.get('category')
-        description = request.POST.get('description')
-        payout_method = request.POST.get('payout_method')
-        payout_email = request.POST.get('payout_email')
-        country = request.POST.get('country')
+        store_name = request.POST.get('store_name', '').strip()
+        category_slug = request.POST.get('category')
+        description = request.POST.get('description', '').strip()
+        payout_method = request.POST.get('payout_method', '').strip()
+        payout_email = request.POST.get('payout_email', '').strip()
+        country = request.POST.get('country', '').strip()
         profile_picture = request.FILES.get('profile_picture')
 
-        if not all([store_name, category_id, description, payout_method, payout_email, country]):
-            return render(request, 'merchant-setup.html', {
-                'error': 'All fields are required.',
-                'categories': Category.objects.all()
-            })
+        # Backend Validation
+        if len(store_name) < 5:
+            error = "Store name must be more than 5 characters."
+        elif not category_slug:
+            error = "Please select a category."
+        elif len(description) < 15:
+            error = "Description must be more than 15 characters."
+        elif not payout_email:
+            error = "Payout email is required."
+        else:
+            try:
+                validate_email(payout_email)
+            except ValidationError:
+                error = "Enter a valid email address."
 
-        profile.store_name = store_name
-        profile.category_id = category_id
-        profile.description = description
-        profile.payout_method = payout_method
-        profile.payout_email = payout_email
-        profile.country = country
-        profile.profile_picture = profile_picture if profile_picture else profile.profile_picture
-        profile.is_profile_complete = True
-        profile.save()
+        # Check if selected category slug is valid
+        if not error:
+            category = Category.objects.filter(slug=category_slug).first()
+            if not category:
+                error = "Selected category is invalid."
 
-        return redirect('merchant_dashboard')
+        if not error:
+            profile.store_name = store_name
+            profile.category = category
+            profile.description = description
+            profile.payout_method = payout_method  # Optional
+            profile.payout_email = payout_email
+            profile.country = country
+            profile.profile_picture = profile_picture if profile_picture else profile.profile_picture
+            profile.is_profile_complete = True
+            profile.save()
+            return redirect('merchant_dashboard')
 
-    categories = Category.objects.all()
-    return render(request, 'merchant-setup.html', {'categories': categories})
+    return render(request, 'merchant-setup.html', {
+        'categories': categories,
+        'error': error,
+        'profile': profile
+    })
 
 def contact(request):
     return render(request, 'contact.html')

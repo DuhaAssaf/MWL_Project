@@ -82,8 +82,8 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-    search_fields = ('name',)
+    list_display = ('slug',)
+    search_fields = ('slug',)
 
 
 @admin.register(RecentlyViewedProduct)

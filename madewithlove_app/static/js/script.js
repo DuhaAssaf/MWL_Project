@@ -210,3 +210,66 @@ document.addEventListener("DOMContentLoaded", function () {
       }, 3000);
   }
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+  const profileForm = document.getElementById("profileForm");
+
+  if (profileForm) {
+      profileForm.addEventListener("submit", function (e) {
+          const storeName = this.store_name.value.trim();
+          const description = this.description.value.trim();
+
+          if (storeName.length < 6) {
+              alert("Store name must be more than 5 characters.");
+              e.preventDefault();
+          }
+
+          if (description.length < 15) {
+              alert("Description must be more than 15 characters.");
+              e.preventDefault();
+          }
+      });
+  }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  const profileForm = document.getElementById("profileForm");
+
+  if (profileForm) {
+      profileForm.addEventListener("submit", function (e) {
+          const storeName = this.store_name.value.trim();
+          const description = this.description.value.trim();
+
+          if (storeName.length < 6) {
+              alert("Store name must be more than 5 characters.");
+              e.preventDefault();
+          }
+
+          if (description.length < 15) {
+              alert("Description must be more than 15 characters.");
+              e.preventDefault();
+          }
+      });
+  }
+
+  // ✅ Image preview
+  const pictureInput = document.getElementById("profilePictureInput");
+  const previewImage = document.getElementById("profilePreview");
+
+  if (pictureInput && previewImage) {
+      pictureInput.addEventListener("change", function () {
+          const file = this.files[0];
+          if (file) {
+              const reader = new FileReader();
+              reader.onload = function (e) {
+                  previewImage.src = e.target.result;
+                  previewImage.style.display = "block";
+              };
+              reader.readAsDataURL(file);
+          } else {
+              previewImage.style.display = "none";
+              previewImage.src = "#";
+          }
+      });
+  }
+});
