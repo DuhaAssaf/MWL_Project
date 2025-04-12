@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shopping Cart{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+  <h1 class="text-center mb-4">Your Cart</h1>
+
+  {% if order.items.all %}
+  <div class="table-responsive">
+    <table class="table dashboard-table">
+      <thead>
+        <tr>
+          <th scope="col">Product</th>
+          <th scope="col">Price</th>
+          <th scope="col">Quantity</th>
+          <th scope="col">Subtotal</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in order.items.all %}
+        <tr>
+          <td>
+            <strong>{{ item.product.name }}</strong><br>
+            <small class="text-muted">{{ item.product.description|truncatechars:40 }}</small>
+          </td>
+          <td>${{ item.price }}</td>
+          <td>{{ item.quantity }}</td>
+          <td>${{ item.quantity|multiply:item.price }}</td>
+          <td>
+            <a href="{% url 'remove_from_cart' item.id %}" class="btn btn-sm btn-outline-danger">Remove</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="text-end mt-4">
+    <h4 class="text-warning">Total: ${{ order.total_amount }}</h4>
+    <a href="{% url 'checkout' %}" class="btn plan-btn">Proceed to Checkout</a>
+  </div>
+  {% else %}
+  <p class="text-center text-muted">Your cart is empty.</p>
+  {% endif %}
+</section>
+{% endblock %}
