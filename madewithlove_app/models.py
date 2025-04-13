@@ -76,11 +76,19 @@ class MerchantProfile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
 
+    store = models.OneToOneField(
+        'Store',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='merchant'
+    )
+
+
     def __str__(self):
         return self.country
     
 class Store(models.Model):
-    merchant = models.OneToOneField(MerchantProfile, on_delete=models.CASCADE, related_name='store' , null=True)
     name = models.CharField(max_length=255)
     description = models.TextField()
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)

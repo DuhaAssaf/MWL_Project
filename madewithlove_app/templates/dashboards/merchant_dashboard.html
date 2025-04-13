@@ -2,22 +2,27 @@
 {% load static %}
 {% block content %}
 <div class="container">
-
   <!-- Store Info Card -->
   <div class="card mb-4 shadow-sm border-0">
     <div class="row g-0">
       <div class="col-md-4">
-        <img src="{{ profile.store.store_logo.url|default:'/static/images/default-store.png' }}"
-            class="img-fluid rounded-start" alt="Store Logo">
+        {% if store_missing %}
+  <div class="alert alert-warning">You haven't set up your store yet. Please complete your profile.</div>
+{% else %}
+  <!-- Store card + products table -->
+{% endif %}
+    {% if store.store_logo %}
+    <img src="{{ store.store_logo.url }}" class="img-fluid" />
+    {% else %}
+    <img src="{% static 'images/default-store.png' %}" class="img-fluid" />
+    {% endif %}
       </div>
       <div class="col-md-8">
         <div class="card-body">
-          <h5 class="card-title">{{ profile.store_name }}</h5>
-          <p class="card-text mb-1"><strong>Category:</strong> {{ profile.category }}</p>
-          <p class="card-text mb-1"><strong>Country:</strong> {{ profile.country }}</p>
-          <p class="card-text"><strong>Status:</strong>
-            </span>
-          </p>
+          <h5 class="card-title">{{ store.name }}</h5>
+          <p class="card-text mb-1"><strong>Category:</strong> {{ profile.store.category|default:"N/A" }}</p>
+          <p class="card-text mb-1"><strong>Country:</strong> {{ profile.country|default:"N/A" }}</p>
+          <p class="card-text"><strong>Status:</strong> Active</p>
           <p class="card-text text-muted small">Manage your store, add products, and track performance below.</p>
         </div>
       </div>
@@ -26,6 +31,9 @@
 
   <!-- Products Table -->
   <div class="table-responsive">
+    <div class="mb-2 text-end">
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productModal" onclick="openAddModal()">Add Product</button>
+    </div>
     <table class="table table-bordered align-middle">
       <thead class="table-light">
         <tr>
@@ -106,7 +114,7 @@
           <div class="col-12">
             <label>Images</label>
             <input type="file" name="images" id="product-image" class="form-control" multiple />
-            <img id="image-preview" style="max-width: 100px; display: none;" class="mt-2" />
+            <div id="image-preview-container" class="d-flex flex-wrap mt-2"></div>
           </div>
         </div>
         <div class="modal-footer">
@@ -116,5 +124,14 @@
     </div>
   </div>
 </div>
+
 <script src="{% static 'js/script.js' %}"></script>
+<script>
+  function openAddModal() {
+    document.getElementById("productModalLabel").textContent = "Add Product";
+    document.getElementById("product-form").reset();
+    document.getElementById("edit-product-id").value = "";
+    document.getElementById("image-preview-container").innerHTML = "";
+  }
+</script>
 {% endblock %}

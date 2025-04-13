@@ -29,20 +29,35 @@ def plans(request):
 def merchant_dashboard_view(request):
     user = request.user
 
-    # Get the merchant profile
-    profile = get_object_or_404(MerchantProfile, user=user)
+    # Redirect if not a merchant
+    if user.role != 'merchant':
+        return redirect('home')
 
-    # Get products related to this merchant's store
-    products = Product.objects.filter(store=profile.store).prefetch_related('images')
+    # Get merchant profile and store
+    profile = get_object_or_404(MerchantProfile.objects.select_related('store'), user=user)
+    store = profile.store
 
-    # Load fixed category list (choices-based)
-    categories = Category.objects.all()
+    if not store:
+        return render(request, 'dashboards/merchant_dashboard.html', {
+            'profile': profile,
+            'products': [],
+            'categories': Category.objects.all(),
+            'store_missing': True,
+        })
 
-    return render(request, 'merchant_dashboard.html', {
+    # Load store products and images
+    products = Product.objects.filter(store=store).prefetch_related('images')
+
+    context = {
         'profile': profile,
+        'store': store,
         'products': products,
-        'categories': categories
-    })
+        'categories': Category.objects.all(),
+        'store_missing': False,
+    }
+
+    return render(request, 'dashboards/merchant_dashboard.html', context)
+
 
 def customer_dashboard(request):
     return HttpResponse("Welcome to the Customer Dashboard!")
@@ -62,7 +77,7 @@ def merchant_setup_view(request):
 
     user = request.user
     if not user.is_authenticated or user.role != 'merchant':
-        return redirect('login')  # Prevent access to this view for non-merchants
+        return redirect('login')  # Prevent access for non-merchants
 
     profile, _ = MerchantProfile.objects.get_or_create(user=user)
     categories = Category.objects.all()
@@ -79,7 +94,7 @@ def merchant_setup_view(request):
         store_logo = request.FILES.get('store_logo')
         slug = slugify(store_name)
 
-        # Backend Validation
+        # Validation
         if len(store_name) < 5:
             error = "Store name must be more than 5 characters."
         elif not category_slug:
@@ -99,16 +114,12 @@ def merchant_setup_view(request):
             error = "Selected category is invalid."
 
         if not error:
-            # Save Merchant Profile
-            profile.payout_method = payout_method
-            profile.payout_email = payout_email
-            profile.country = country
-            profile.profile_picture = profile_picture if profile_picture else profile.profile_picture
-            profile.is_profile_complete = True
-            profile.save()
+            # Create or update store
+            if profile.store:
+                store = profile.store
+            else:
+                store = Store()
 
-            # Save or Create Store
-            store, created = Store.objects.get_or_create(merchant=profile)
             store.name = store_name
             store.description = description
             store.category = category
@@ -117,6 +128,15 @@ def merchant_setup_view(request):
                 store.store_logo = store_logo
             store.save()
 
+            # Link store to merchant profile
+            profile.store = store
+            profile.payout_method = payout_method
+            profile.payout_email = payout_email
+            profile.country = country
+            profile.profile_picture = profile_picture if profile_picture else profile.profile_picture
+            profile.is_profile_complete = True
+            profile.save()
+
             return redirect('merchant_dashboard')
 
     return render(request, 'merchant-setup.html', {
@@ -124,6 +144,7 @@ def merchant_setup_view(request):
         'error': error,
         'profile': profile
     })
+
 def contact(request):
     return render(request, 'contact.html')
 
