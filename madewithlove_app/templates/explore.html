@@ -59,7 +59,7 @@
                           onclick="openOrderModal({{ product.id }}, '{{ product.name }}', {{ product.price }}, {{ product.stock }})">
                           View Details
                         </button>
-                        <button>Add To Cart</button>
+                        <button class="btn btn-sm plan-btn">Add To Cart</button>
                       {% elif role == 'merchant' and store.id == user_store_id %}
                         <span class="text-muted small">Your Store</span>
                       {% endif %}
