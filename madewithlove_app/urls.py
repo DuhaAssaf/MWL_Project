@@ -18,5 +18,5 @@ urlpatterns = [
     path('dashboard/customer/', views.customer_dashboard, name='customer_dashboard'),
     path("dashboard/add-edit-product/", views.add_or_edit_product, name="add_product"),
     path("dashboard/products/json/", views.get_merchant_products, name="merchant_products_json"),
-    # path('add-to-cart/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
+    path('add-to-cart/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
     ]
