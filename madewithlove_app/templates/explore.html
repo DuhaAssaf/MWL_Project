@@ -57,7 +57,7 @@
                       {% elif role == 'customer' or role == 'merchant' and store.id != user_store_id %}
                         <button class="btn btn-sm plan-btn"
                           onclick="openOrderModal({{ product.id }}, '{{ product.name }}', {{ product.price }}, {{ product.stock }})">
-                          Add to Cart
+                          View Details
                         </button>
                       {% elif role == 'merchant' and store.id == user_store_id %}
                         <span class="text-muted small">Your Store</span>
