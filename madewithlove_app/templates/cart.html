@@ -4,19 +4,39 @@
 
 {% block content %}
 <section class="container py-5">
-    <h1 class="text-center mb-5">🛒 Your Cart</h1>
+    <h1 class="text-center mb-4">🛒 Your Cart</h1>
+
+    {% if order %}
+    <div class="text-center mb-4">
+        <p class="fw-bold">Order Status: 
+            {% if order.status == 'pending' %}
+                <span class="text-warning">Pending</span>
+            {% elif order.status == 'confirmed' %}
+                <span class="text-info">Confirmed</span>
+            {% elif order.status == 'shipped' %}
+                <span class="text-primary">Shipped</span>
+            {% elif order.status == 'delivered' %}
+                <span class="text-success">Delivered</span>
+            {% elif order.status == 'cancelled' %}
+                <span class="text-danger">Cancelled</span>
+            {% else %}
+                <span class="text-muted">{{ order.status }}</span>
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
 
     {% if cart_items %}
     <div class="table-responsive">
         <table class="table dashboard-table">
             <thead>
                 <tr>
-                    <th scope="col">Product</th>
-                    <th scope="col">Image</th>
-                    <th scope="col">Price</th>
-                    <th scope="col">Quantity</th>
-                    <th scope="col">Subtotal</th>
-                    <th scope="col">Action</th>
+                    <th>Product</th>
+                    <th>Image</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Subtotal</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -32,7 +52,7 @@
                     </td>
                     <td>${{ item.price }}</td>
                     <td>{{ item.quantity }}</td>
-                    <td>${{ item.price|floatformat:2|add:"0"|floatformat:2|floatformat:"2" }}</td>
+                    <td>${{ item.price|floatformat:2 }}</td>
                     <td>
                         <form action="{% url 'remove_from_cart' item.id %}" method="post">
                             {% csrf_token %}
