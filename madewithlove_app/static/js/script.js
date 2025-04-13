@@ -1,7 +1,5 @@
-// Updated script.js with Register/Login Validation + AJAX Product CRUD + Toasts + Pagination + Filters + Image Preview
-
 document.addEventListener("DOMContentLoaded", function () {
-  // ✅ Register/Login form validation
+  // ✅ Register/Login Form Validation
   const registerForm = document.querySelector("form[action='/register/']");
   const loginForm = document.querySelector("form[action='/login/']");
 
@@ -12,10 +10,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const phone = registerForm.querySelector("input[name='phone_number']");
 
     registerForm.addEventListener("submit", function (e) {
-      let valid = true;
       let messages = [];
-
-      if (password1.value.length < 8) messages.push("Password must be at least 8 characters long.");
+      if (password1.value.length < 8) messages.push("Password must be at least 8 characters.");
       if (password1.value !== password2.value) messages.push("Passwords do not match.");
       if (!/^\S+@\S+\.\S+$/.test(email.value)) messages.push("Invalid email address.");
       if (phone && phone.value && !/^\+?[0-9]{7,15}$/.test(phone.value)) messages.push("Invalid phone number format.");
@@ -47,7 +43,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("product-form");
   const tableBody = document.getElementById("product-table");
   const searchBar = document.getElementById("search-bar");
-  const categoryFilter = document.getElementById("category-filter");
   const imageInput = document.getElementById("product-image");
   const previewImg = document.getElementById("image-preview");
   const paginationInfo = document.getElementById("pagination-info");
@@ -96,34 +91,21 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function applyFilters() {
-    const term = searchBar.value.toLowerCase();
-    const cat = categoryFilter.value;
-    const filtered = products.filter(p => {
-      const matchText = p.name.toLowerCase().includes(term) || p.category.toLowerCase().includes(term) || p.description.toLowerCase().includes(term);
-      const matchCat = !cat || p.category === cat;
-      return matchText && matchCat;
-    });
+    const term = searchBar?.value.toLowerCase() || "";
+    const filtered = products.filter(p =>
+      p.name.toLowerCase().includes(term) ||
+      p.description.toLowerCase().includes(term)
+    );
     renderTable(filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage));
     updatePagination(filtered.length);
   }
 
-  function updateCategoryDropdown() {
-    const categories = [...new Set(products.map(p => p.category))];
-    categoryFilter.innerHTML = '<option value="">All Categories</option>';
-    categories.forEach(cat => {
-      const option = document.createElement("option");
-      option.value = cat;
-      option.textContent = cat;
-      categoryFilter.appendChild(option);
-    });
-  }
-
   window.editProduct = index => {
     const p = products[index];
+    form["edit-product-id"].value = p.id || "";
     form["product-name"].value = p.name;
-    form["product-category"].value = p.category;
     form["product-price"].value = p.price;
-    form["product-image"].value = p.image;
+    form["product-stock"].value = p.stock;
     form["product-description"].value = p.description;
     previewImg.src = p.image;
     previewImg.style.display = p.image ? "block" : "none";
@@ -133,53 +115,58 @@ document.addEventListener("DOMContentLoaded", function () {
     if (confirm(`Delete "${products[index].name}"?`)) {
       products.splice(index, 1);
       applyFilters();
-      updateCategoryDropdown();
       showToast("Product deleted successfully.");
     }
   };
 
   form.onsubmit = e => {
     e.preventDefault();
-    const newProduct = {
-      name: form["product-name"].value.trim(),
-      category: form["product-category"].value.trim(),
-      price: form["product-price"].value.trim(),
-      image: form["product-image"].value.trim() || "https://via.placeholder.com/50",
-      description: form["product-description"].value.trim()
-    };
-    products.push(newProduct);
-    updateCategoryDropdown();
-    currentPage = 1;
-    applyFilters();
-    bootstrap.Modal.getInstance(document.getElementById("productModal")).hide();
-    form.reset();
-    previewImg.style.display = "none";
-    showToast("Product saved successfully.");
-  };
+    const formData = new FormData(form);
 
-  imageInput.addEventListener("input", () => {
-    const url = imageInput.value;
-    previewImg.src = url;
-    previewImg.style.display = url ? "block" : "none";
+    fetch(form.action, {
+      method: "POST",
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        showToast("Product saved successfully.");
+        form.reset();
+        previewImg.style.display = "none";
+        bootstrap.Modal.getInstance(document.getElementById("productModal")).hide();
+      } else {
+        showToast(data.message || "Error occurred.", false);
+        console.error("Server error:", data);
+      }
+    })
+    .catch(error => {
+      console.error("Fetch error:", error);
+      showToast("Something went wrong.", false);
+    });
+  imageInput.addEventListener("change", () => {
+    const file = imageInput.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        previewImg.src = e.target.result;
+        previewImg.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    }
   });
 
-  prevPageBtn.addEventListener("click", () => {
+  prevPageBtn?.addEventListener("click", () => {
     if (currentPage > 1) currentPage--;
     applyFilters();
   });
 
-  nextPageBtn.addEventListener("click", () => {
+  nextPageBtn?.addEventListener("click", () => {
     const totalPages = Math.ceil(products.length / itemsPerPage);
     if (currentPage < totalPages) currentPage++;
     applyFilters();
   });
 
-  searchBar.addEventListener("input", () => {
-    currentPage = 1;
-    applyFilters();
-  });
-
-  categoryFilter.addEventListener("change", () => {
+  searchBar?.addEventListener("input", () => {
     currentPage = 1;
     applyFilters();
   });
@@ -199,59 +186,24 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   extractInitialProducts();
-  updateCategoryDropdown();
   applyFilters();
-});
 
-document.addEventListener("DOMContentLoaded", function () {
-  if (typeof redirectUrl !== "undefined") {
-      setTimeout(function () {
-          window.location.href = redirectUrl;
-      }, 3000);
-  }
-});
-
-document.addEventListener("DOMContentLoaded", function () {
+  // ✅ Profile Page Form Validation + Image Preview
   const profileForm = document.getElementById("profileForm");
-
   if (profileForm) {
-      profileForm.addEventListener("submit", function (e) {
-          const storeName = this.store_name.value.trim();
-          const description = this.description.value.trim();
-
-          if (storeName.length < 6) {
-              alert("Store name must be more than 5 characters.");
-              e.preventDefault();
-          }
-
-          if (description.length < 15) {
-              alert("Description must be more than 15 characters.");
-              e.preventDefault();
-          }
-      });
+    profileForm.addEventListener("submit", function (e) {
+      const storeName = this.store_name.value.trim();
+      const description = this.description.value.trim();
+      if (storeName.length < 6) {
+        alert("Store name must be more than 5 characters.");
+        e.preventDefault();
+      }
+      if (description.length < 15) {
+        alert("Description must be more than 15 characters.");
+        e.preventDefault();
+      }
+    });
   }
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-  const profileForm = document.getElementById("profileForm");
-
-  if (profileForm) {
-      profileForm.addEventListener("submit", function (e) {
-          const storeName = this.store_name.value.trim();
-          const description = this.description.value.trim();
-
-          if (storeName.length < 6) {
-              alert("Store name must be more than 5 characters.");
-              e.preventDefault();
-          }
-
-          if (description.length < 15) {
-              alert("Description must be more than 15 characters.");
-              e.preventDefault();
-          }
-      });
-  }
-
 
   const profileInput = document.getElementById("profilePictureInput");
   const profilePreview = document.getElementById("profilePreview");
@@ -259,30 +211,30 @@ document.addEventListener("DOMContentLoaded", function () {
   const storePreview = document.getElementById("storeLogoPreview");
 
   if (profileInput) {
-      profileInput.addEventListener("change", (e) => {
-          const file = e.target.files[0];
-          if (file) {
-              const reader = new FileReader();
-              reader.onload = (event) => {
-                  profilePreview.src = event.target.result;
-                  profilePreview.style.display = "block";
-              };
-              reader.readAsDataURL(file);
-          }
-      });
+    profileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          profilePreview.src = event.target.result;
+          profilePreview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
   }
 
   if (storeInput) {
-      storeInput.addEventListener("change", (e) => {
-          const file = e.target.files[0];
-          if (file) {
-              const reader = new FileReader();
-              reader.onload = (event) => {
-                  storePreview.src = event.target.result;
-                  storePreview.style.display = "block";
-              };
-              reader.readAsDataURL(file);
-          }
-      });
+    storeInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          storePreview.src = event.target.result;
+          storePreview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
   }
 });

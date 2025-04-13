@@ -380,46 +380,58 @@ def add_or_edit_product(request):
     if request.method == 'POST':
         user_id = request.session.get('user_id')
         role = request.session.get('role')
+
         if role != 'merchant':
             return JsonResponse({'success': False, 'message': 'Unauthorized'})
 
+        # Get merchant profile and store
         merchant = MerchantProfile.objects.filter(user_id=user_id).first()
-        store = merchant.store
+        if not merchant or not merchant.store:
+            return JsonResponse({'success': False, 'message': 'Merchant store not found'})
 
+        store = merchant.store
+        category = store.category  # Auto-assign category from store
+
+        # Get product fields
         product_id = request.POST.get('product_id')
         name = request.POST.get('name')
         price = request.POST.get('price')
         stock = request.POST.get('stock')
-        category_id = request.POST.get('category')
         description = request.POST.get('description')
         images = request.FILES.getlist('images')
 
+        if not all([name, price, stock, description]):
+            return JsonResponse({'success': False, 'message': 'Missing required fields'})
+
+        # Add or update
         if product_id:
-            # Edit product
-            product = Product.objects.get(id=product_id)
+            product = Product.objects.filter(id=product_id, store=store).first()
+            if not product:
+                return JsonResponse({'success': False, 'message': 'Product not found'})
+
             product.name = name
             product.price = price
             product.stock = stock
-            product.category_id = category_id
             product.description = description
+            product.category = category  # Always update to match store
             product.save()
         else:
-            # Add new product
             product = Product.objects.create(
                 store=store,
                 name=name,
                 price=price,
                 stock=stock,
-                category_id=category_id,
-                description=description
+                description=description,
+                category=category  # Auto-filled
             )
 
+        # Save product images
         if images:
             for img in images:
-                ProductImage.objects.create(product=product, merchant=merchant, image=img)
+                ProductImage.objects.create(product=product, image=img)
 
         return JsonResponse({'success': True, 'message': 'Product saved successfully'})
-
+    
 @csrf_exempt
 def delete_product(request):
     if request.method == 'POST':

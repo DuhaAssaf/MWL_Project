@@ -85,38 +85,37 @@
           <h5 class="modal-title" id="productModalLabel">Add/Edit Product</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
+
         <div class="modal-body row g-3">
           <input type="hidden" name="product_id" id="edit-product-id">
+
           <div class="col-md-6">
-            <label>Name</label>
-            <input type="text" name="name" id="product-name" class="form-control" required />
+            <label for="product-name" class="form-label">Product Name</label>
+            <input type="text" name="name" id="product-name" class="form-control" required>
           </div>
+
           <div class="col-md-6">
-            <label>Price</label>
-            <input type="number" name="price" step="0.01" id="product-price" class="form-control" required />
+            <label for="product-price" class="form-label">Price ($)</label>
+            <input type="number" name="price" step="0.01" id="product-price" class="form-control" required>
           </div>
+
           <div class="col-md-6">
-            <label>Stock</label>
-            <input type="number" name="stock" id="product-stock" class="form-control" required />
+            <label for="product-stock" class="form-label">Stock</label>
+            <input type="number" name="stock" id="product-stock" class="form-control" required>
           </div>
-          <div class="col-md-6">
-            <label>Category</label>
-            <select name="category" id="product-category" class="form-select" required>
-              {% for cat in categories %}
-                <option value="{{ cat.slug }}">{{ cat }}</option>
-              {% endfor %}
-            </select>
-          </div>
+
           <div class="col-12">
-            <label>Description</label>
+            <label for="product-description" class="form-label">Description</label>
             <textarea name="description" id="product-description" class="form-control" rows="3" required></textarea>
           </div>
+
           <div class="col-12">
-            <label>Images</label>
-            <input type="file" name="images" id="product-image" class="form-control" multiple />
-            <div id="image-preview-container" class="d-flex flex-wrap mt-2"></div>
+            <label for="product-image" class="form-label">Product Images</label>
+            <input type="file" name="images" id="product-image" class="form-control" multiple>
+            <img id="image-preview" class="mt-2" style="max-width: 100px; display: none;" />
           </div>
         </div>
+
         <div class="modal-footer">
           <button type="submit" class="btn btn-success">Save</button>
         </div>
@@ -124,7 +123,6 @@
     </div>
   </div>
 </div>
-
 <script src="{% static 'js/script.js' %}"></script>
 <script>
   function openAddModal() {
