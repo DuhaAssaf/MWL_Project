@@ -5,7 +5,7 @@ from django.db import IntegrityError
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
 from django.utils.http import urlencode
-from .models import ProductImage, User, MerchantProfile, CustomerProfile, Subscription, Category,Store
+from .models import ProductImage, User, MerchantProfile, CustomerProfile, Subscription, Category,Store,Order,OrderItem
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -503,3 +503,42 @@ def get_merchant_products(request):
     return JsonResponse({'success': True, 'products': data})
 
 
+
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+
+
+def confirm_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user, status='pending')
+
+    if request.method == 'POST':
+        order.status = 'confirmed'
+        order.save()
+        messages.success(request, "Your order has been confirmed!")
+        return redirect('cart')  # or wherever you want to redirect
+    
+
+@login_required
+def add_to_cart(request, product_id):
+    customer = get_object_or_404(CustomerProfile, user=request.user)
+    product = get_object_or_404(Product, id=product_id)
+
+    # Get or create a pending order
+    order, created = Order.objects.get_or_create(
+        customer=customer, status='pending',
+        defaults={'shipping_address': customer.address or 'To be added later'}
+    )
+
+    # Add or update item in order
+    order_item, item_created = OrderItem.objects.get_or_create(
+        order=order, product=product,
+        defaults={'price': product.price, 'quantity': 1}
+    )
+
+    if not item_created:
+        order_item.quantity += 1
+        order_item.save()
+
+    messages.success(request, f"{product.name} added to your cart!")
+    return redirect('cart')
