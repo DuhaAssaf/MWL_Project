@@ -18,5 +18,6 @@ urlpatterns = [
     path('dashboard/customer/', views.customer_dashboard, name='customer_dashboard'),
     path("dashboard/add-edit-product/", views.add_or_edit_product, name="add_product"),
     path('confirm-order/<int:order_id>/', views.confirm_order, name='confirm_order'),
+    path('add-to-cart/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
     
     ]
