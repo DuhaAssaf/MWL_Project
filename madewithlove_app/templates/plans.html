@@ -17,12 +17,10 @@
             <h3>${{ plan.price }}/month</h3>
             <ul class="list-unstyled my-3">
                 {% for feature in plan.features %}
-                <li>✅ {{ feature }}</li>
+                <li>✅{{ feature }}</li>
                 {% endfor %}
             </ul>
-            {% comment %} <a href="{% url 'register' %}" class="btn w-100 plan-btn">{{ plan.cta }}</a> {% endcomment %}
-            <a href="{% url 'subscribe' %}?plan=Basic" class="btn btn-primary">Get Started</a>
-
+            <a href="{% url 'subscribe' %}?plan={{ plan.name }}" class="btn btn-primary">{{ plan.cta }}</a>
             </div>
         </div>
         </div>

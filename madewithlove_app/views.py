@@ -14,9 +14,9 @@ def homepage(request):
 
 def plans(request):
     plans = [
-        {"name": "Basic", "price": "9", "features": ["1 Store", "10 Products", "Basic Support"], "cta": "Get Started"},
-        {"name": "Pro", "price": "19", "features": ["3 Stores", "50 Products", "Priority Support"], "cta": "Choose Pro"},
-        {"name": "Premium", "price": "29", "features": ["Unlimited Stores", "Unlimited Products", "24/7 Premium Support"], "cta": "Go Premium"},
+        {"name": "Basic", "price": "1", "features": ["1 Store", "10 Products", "Basic Support"], "cta": "Get Started"},
+        {"name": "Pro", "price": "6", "features": ["3 Stores", "50 Products", "Priority Support"], "cta": "Choose Pro"},
+        {"name": "Premium", "price": "12", "features": ["Unlimited Stores", "Unlimited Products", "24/7 Premium Support"], "cta": "Go Premium"},
     ]
     return render(request, 'plans.html', {"plans": plans})
 
@@ -342,14 +342,29 @@ def admin_dashboard_view(request):
 
 
 # this code to subscribe 
+# def subscribe_view(request):
+#     plan = request.GET.get('plan', 'Basic')
+#     if request.method == 'POST':
+#         name = request.POST.get('card_name')
+#         number = request.POST.get('card_number')
+#         expiry = request.POST.get('expiry_date')
+#         cvv = request.POST.get('cvv')
+#         print(f"Subscribed to {plan}: {name}, {number}, {expiry}, {cvv}")
+#     return render(request, 'subscribe.html', {'plan': plan})
+
 def subscribe_view(request):
     plan = request.GET.get('plan', 'Basic')
+    prices = {
+        'Basic': '$10/month',
+        'Pro': '$20/month',
+        'Premium': '$30/month'
+    }
+    price = prices.get(plan, '$10/month')
+
     if request.method == 'POST':
-        # هون بتتعامل مع البيانات (ممكن تحفظ أو ترسلها لبوابة دفع)
         name = request.POST.get('card_name')
         number = request.POST.get('card_number')
         expiry = request.POST.get('expiry_date')
         cvv = request.POST.get('cvv')
-        # امثلة: print أو redirect أو رسالة نجاح
-        print(f"Subscribed to {plan}: {name}, {number}, {expiry}, {cvv}")
-    return render(request, 'subscribe.html', {'plan': plan})
+        return render(request, 'success.html', {'plan': plan})
+    return render(request, 'subscribe.html', {'plan': plan, 'price': price})

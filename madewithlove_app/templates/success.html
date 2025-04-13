@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Subscription Successful | Made With Love{% endblock %}
+
+{% block content %}
+<section class="text-center py-5">
+    <div class="container">
+        <h2 class="text-success fw-bold mb-3">Subscription Successful!</h2>
+        <p class="lead">You have successfully subscribed to the <strong>{{ plan }}</strong> plan.</p>
+        <a href="/" class="btn btn-outline-primary mt-4">Back to Home</a>
+    </div>
+</section>
+{% endblock %}
