@@ -353,3 +353,28 @@ def confirm_order(request, order_id):
         order.save()
         messages.success(request, "Your order has been confirmed!")
         return redirect('cart')  # or wherever you want to redirect
+    
+
+@login_required
+def add_to_cart(request, product_id):
+    customer = get_object_or_404(CustomerProfile, user=request.user)
+    product = get_object_or_404(Product, id=product_id)
+
+    # Get or create a pending order
+    order, created = Order.objects.get_or_create(
+        customer=customer, status='pending',
+        defaults={'shipping_address': customer.address or 'To be added later'}
+    )
+
+    # Add or update item in order
+    order_item, item_created = OrderItem.objects.get_or_create(
+        order=order, product=product,
+        defaults={'price': product.price, 'quantity': 1}
+    )
+
+    if not item_created:
+        order_item.quantity += 1
+        order_item.save()
+
+    messages.success(request, f"{product.name} added to your cart!")
+    return redirect('cart')
