@@ -9,8 +9,10 @@
     {% if order %}
     <div class="text-center mb-4">
         <p class="fw-bold">Order Status: 
-            {% if order.status == 'pending' %}
-                <span class="text-warning">Pending</span>
+          <form action="{% url 'confirm_order' order.id %}" method="post" class="d-inline-block mt-3">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">Confirm Order</button>
+        </form>
             {% elif order.status == 'confirmed' %}
                 <span class="text-info">Confirmed</span>
             {% elif order.status == 'shipped' %}
