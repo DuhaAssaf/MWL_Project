@@ -1,31 +1,109 @@
-{% extends 'base.html' %}
-
-{% block title %}Explore Stores | Made With Love{% endblock %}
+{% extends "base.html" %}
+{% load static %}
 
 {% block content %}
-<section class="container py-5">
-    <div class="text-center mb-5">
-    <h1 class="fw-bold">Explore Stores</h1>
-    <p class="text-muted">Discover unique stores from our creative merchants.</p>
-    </div>
+<div class="container my-4">
+  <h2 class="text-center text-warning mb-4">Explore All Stores</h2>
 
-    <div class="row g-4">
+  <form method="get" class="mb-4 d-flex justify-content-center">
+    <input type="text" name="q" value="{{ query }}" class="form-control w-50" placeholder="Search stores...">
+    <button class="btn plan-btn ms-2">Search</button>
+  </form>
+
+  <div class="row">
     {% for store in stores %}
-    <div class="col-md-4">
-        <div class="card h-100 explore-card">
-        <img src="{{ store.image }}" class="card-img-top" alt="{{ store.store_name }}">
-        <div class="card-body">
-            <h5 class="card-title">{{ store.store_name }}</h5>
-            <p class="card-text text-muted">{{ store.description }}</p>
+    <div class="col-md-6 mb-4">
+      <div class="card explore-card shadow-sm">
+        <div class="row g-0">
+          <div class="col-md-4">
+            {% if store.store_logo %}
+              <img src="{{ store.store_logo.url }}" class="img-fluid h-100 object-fit-cover" alt="Store Logo">
+            {% else %}
+              <img src="{% static 'images/default-store.png' %}" class="img-fluid h-100 object-fit-cover" alt="Default Store Logo">
+            {% endif %}
+          </div>
+          <div class="col-md-8">
+            <div class="card-body">
+              <h5 class="card-title">{{ store.name }}</h5>
+              <p class="small text-muted">{{ store.category }}</p>
+              <p class="card-text">{{ store.description|truncatewords:20 }}</p>
+
+              {% if store.products %}
+              <div class="mt-3">
+                <strong class="text-warning">Products:</strong>
+                <ul class="list-group list-group-flush mt-2">
+                  {% for product in store.products %}
+                  <li class="list-group-item bg-transparent text-light d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                      {% with product.images.first as img %}
+                        {% if img %}
+                          <img src="{{ img.image.url }}" width="40" height="40" class="rounded" alt="Product Image">
+                        {% else %}
+                          <img src="{% static 'images/default-product.png' %}" width="40" height="40" class="rounded" alt="Default">
+                        {% endif %}
+                      {% endwith %}
+
+                      <div>
+                        <strong>{{ product.name }}</strong><br>
+                        <small>${{ product.price }} | Stock: {{ product.stock }}</small>
+                      </div>
+                    </div>
+
+                    <div class="text-end">
+                      {% if product.stock == 0 %}
+                        <span class="badge bg-secondary">Out of Stock</span>
+                      {% elif not role %}
+                        <a href="{% url 'login' %}" class="btn btn-sm btn-outline-light">Login to Order</a>
+                      {% elif role == 'customer' or role == 'merchant' and store.id != user_store_id %}
+                        <button class="btn btn-sm plan-btn"
+                          onclick="openOrderModal({{ product.id }}, '{{ product.name }}', {{ product.price }}, {{ product.stock }})">
+                          Add to Cart
+                        </button>
+                      {% elif role == 'merchant' and store.id == user_store_id %}
+                        <span class="text-muted small">Your Store</span>
+                      {% endif %}
+                    </div>
+                  </li>
+                  {% endfor %}
+                </ul>
+              </div>
+              {% else %}
+              <p class="text-muted mt-2">No active products listed.</p>
+              {% endif %}
+            </div>
+          </div>
         </div>
-        <div class="card-footer text-end">
-            <a href="{% url 'storefront_by_slug' slug=store.slug %}" class="btn btn-sm btn-outline-primary">Visit Store</a>
-        </div>
-        </div>
+      </div>
     </div>
     {% empty %}
-    <p class="text-center text-muted">No stores found at the moment.</p>
+    <p class="text-center">No stores found.</p>
     {% endfor %}
+  </div>
+</div>
+
+<!-- Order Modal -->
+<div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content dashboard-modal">
+      <form id="orderForm">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="orderModalLabel">Order Product</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p><strong id="orderProductName"></strong></p>
+          <input type="hidden" name="product_id" id="orderProductId">
+          <div class="mb-3">
+            <label for="orderQuantity">Quantity</label>
+            <input type="number" class="form-control" id="orderQuantity" name="quantity" min="1" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn plan-btn">Confirm Order</button>
+        </div>
+      </form>
     </div>
-</section>
+  </div>
+</div>
 {% endblock %}

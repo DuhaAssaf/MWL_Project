@@ -68,8 +68,34 @@ def admin_dashboard(request):
 def subscriptions(request):
     return render(request, 'subscriptions.html')
 
-def explore(request):
-    return render(request, 'explore.html')
+def explore_all_stores(request):
+    query = request.GET.get("q", "")
+    stores = Store.objects.filter(is_store_active=True).select_related('category')
+
+    if query:
+        stores = stores.filter(name__icontains=query)
+
+    for store in stores:
+        store.products = store.product.filter(is_active=True)  # attach products
+
+    user = request.user if request.user.is_authenticated else None
+    role = getattr(user, 'role', None)
+
+    # Get current merchant store if logged in as merchant
+    user_store_id = None
+    if role == "merchant":
+        merchant = MerchantProfile.objects.filter(user=user).first()
+        if merchant and merchant.store:
+            user_store_id = merchant.store.id
+
+    context = {
+        "stores": stores,
+        "query": query,
+        "role": role,
+        "user_store_id": user_store_id,
+    }
+
+    return render(request, "explore.html", context)
 
 @login_required
 def merchant_setup_view(request):
@@ -216,13 +242,6 @@ def storefront_by_slug(request, slug):
 
     return render(request, "storefront.html", context)
 
-def explore_all_stores(request):
-    stores = [
-        {"slug": "handmade-creations", "store_name": "Handmade Creations", "description": "Beautiful handcrafted gifts and decor.", "image": "https://via.placeholder.com/300"},
-        {"slug": "digital-art-zone", "store_name": "Digital Art Zone", "description": "Prints and graphics by creative artists.", "image": "https://via.placeholder.com/300"},
-        {"slug": "planner-heaven", "store_name": "Planner Heaven", "description": "Organizers, calendars and goal trackers.", "image": "https://via.placeholder.com/300"},
-    ]
-    return render(request, "explore.html", {"stores": stores})
 
 def register_view(request):
     if request.method == 'POST':
@@ -379,8 +398,6 @@ def logout_view(request):
 @csrf_exempt  
 def add_or_edit_product(request):
     if request.method == 'POST':
-        print("🔧 DELETE FLAG:", request.POST.get('delete'))
-        print("📦 PRODUCT ID:", request.POST.get('product_id'))
         user_id = request.session.get('user_id')
         role = request.session.get('role')
 
@@ -392,19 +409,29 @@ def add_or_edit_product(request):
             return JsonResponse({'success': False, 'message': 'Merchant store not found'})
 
         store = merchant.store
+        product_id = request.POST.get('product_id')
+        is_delete = request.POST.get('delete') == 'true'
+        is_undo = request.POST.get('undo') == 'true'
 
-        if request.POST.get('delete') == 'true':
-            print("🧪 DELETE detected!")
-            product_id = request.POST.get('product_id')
-            print("🧪 PRODUCT ID received:", product_id)
+        # SOFT DELETE
+        if is_delete:
             product = Product.objects.filter(id=product_id, store=store).first()
             if product:
-                product.delete()
-                return JsonResponse({'success': True, 'message': 'Product deleted'})
+                product.is_active = False
+                product.save()
+                return JsonResponse({'success': True, 'message': 'Product deleted (soft)'})
             return JsonResponse({'success': False, 'message': 'Product not found'})
 
-        # Normal Add/Edit
-        product_id = request.POST.get('product_id')
+        # UNDO DELETE
+        if is_undo:
+            product = Product.objects.filter(id=product_id, store=store).first()
+            if product:
+                product.is_active = True
+                product.save()
+                return JsonResponse({'success': True, 'message': 'Undo successful'})
+            return JsonResponse({'success': False, 'message': 'Product not found'})
+
+        # NORMAL ADD/EDIT
         name = request.POST.get('name')
         price = request.POST.get('price')
         stock = request.POST.get('stock')
@@ -439,10 +466,40 @@ def add_or_edit_product(request):
             for img in images:
                 ProductImage.objects.create(product=product, image=img)
 
-        return JsonResponse({'success': True, 'message': 'Product saved'})    
+        return JsonResponse({'success': True, 'message': 'Product saved'})
 
 def admin_dashboard_view(request):
     # Replace this with your actual logic
     return render(request, 'admin_dashboard.html')
+
+@login_required
+@csrf_exempt
+def get_merchant_products(request):
+    user_id = request.session.get('user_id')
+    role = request.session.get('role')
+
+    if role != 'merchant':
+        return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=403)
+
+    merchant = MerchantProfile.objects.filter(user_id=user_id).first()
+    if not merchant or not merchant.store:
+        return JsonResponse({'success': False, 'message': 'Merchant store not found'}, status=404)
+
+    products = Product.objects.filter(store=merchant.store, is_active=True).prefetch_related('images')
+
+    data = []
+    for product in products:
+        images = [img.image.url for img in product.images.all()]
+        data.append({
+            'id': product.id,
+            'name': product.name,
+            'price': float(product.price),
+            'stock': product.stock,
+            'category': str(product.category),
+            'description': product.description,
+            'image': images[0] if images else '/static/images/default-product.png'
+        })
+
+    return JsonResponse({'success': True, 'products': data})
 
 
