@@ -14,6 +14,15 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 
+def generate_unique_slug(base_name):
+    slug = slugify(base_name)
+    unique_slug = slug
+    num = 1
+    while Store.objects.filter(slug=unique_slug).exists():
+        unique_slug = f"{slug}-{num}"
+        num += 1
+    return unique_slug
+
 def homepage(request):
     return render(request, 'homepage.html')
 
@@ -118,7 +127,7 @@ def merchant_setup_view(request):
         country = request.POST.get('country', '').strip()
         profile_picture = request.FILES.get('profile_picture')
         store_logo = request.FILES.get('store_logo')
-        slug = slugify(store_name)
+        slug = generate_unique_slug(store_name)
 
         # Validation
         if len(store_name) < 5:

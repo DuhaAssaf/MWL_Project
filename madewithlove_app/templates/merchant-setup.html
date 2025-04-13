@@ -3,121 +3,140 @@
 {% block title %}{{ profile.is_profile_complete|yesno:"Edit Your Profile,Setup Your Profile" }}{% endblock %}
 
 {% block content %}
-<div class="card shadow p-4 border-0 rounded-4">
-    <div class="container mt-5">
-        <h2 class="text-center text-warning mb-4">
-            {% if profile.is_profile_complete %}
-                Edit Your Store Profile
-            {% else %}
-                Welcome, {{ request.session.username|default:"User" }} — Complete Your Profile Please
-            {% endif %}
-        </h2>
+<div class="container my-5 d-flex justify-content-center">
+  <div class="card shadow p-4 border-0 rounded-4 dashboard-card w-100" style="max-width: 800px;">
+    <h2 class="text-center text-warning mb-4">
+      {% if profile.is_profile_complete %}
+        Edit Your Store Profile
+      {% else %}
+        Welcome, {{ request.session.username|default:"User" }} — Complete Your Profile
+      {% endif %}
+    </h2>
 
-        {% if error %}
-            <div class="alert alert-danger text-center">{{ error }}</div>
+    {% if error %}
+      <div class="alert alert-danger text-center">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data" id="profileForm" novalidate>
+      {% csrf_token %}
+
+      <!-- Profile Picture -->
+      <div class="mb-4 row align-items-center">
+        <div class="col-md-8">
+          <label class="form-label">Profile Picture</label>
+          <input type="file" name="profile_picture" class="form-control" id="profilePictureInput" accept="image/*">
+        </div>
+        <div class="col-md-4 text-center">
+          <img id="profilePreview"
+               src="{{ profile.profile_picture.url|default:'#' }}"
+               class="img-thumbnail rounded shadow-sm"
+               style="max-width: 100px; {% if not profile.profile_picture %}display:none;{% endif %}">
+        </div>
+      </div>
+
+      <!-- Store Name -->
+      <div class="mb-4">
+        <label class="form-label">Store Name</label>
+        <input type="text" name="store_name" class="form-control" required minlength="6"
+               value="{{ profile.store.name|default:'' }}">
+      </div>
+
+      <!-- Store Logo -->
+      <div class="mb-4 row align-items-center">
+        <div class="col-md-8">
+          <label class="form-label">Store Logo</label>
+          <input type="file" name="store_logo" class="form-control" id="storeLogoInput" accept="image/*">
+        </div>
+        <div class="col-md-4 text-center">
+          <img id="storeLogoPreview"
+               src="{{ profile.store.store_logo.url|default:'#' }}"
+               class="img-thumbnail rounded shadow-sm"
+               style="max-width: 100px; {% if not profile.store or not profile.store.store_logo %}display:none;{% endif %}">
+        </div>
+      </div>
+
+      <!-- Category -->
+      <div class="mb-4">
+        <label class="form-label">Category</label>
+        <select name="category" class="form-select" required>
+          <option value="">Select a category</option>
+          {% for category in categories %}
+            <option value="{{ category.slug }}"
+              {% if profile.store and profile.store.category.slug == category.slug %}selected{% endif %}>
+              {{ category }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Description -->
+      <div class="mb-4">
+        <label class="form-label">Description</label>
+        <textarea name="description" class="form-control" rows="3" required minlength="15">{{ profile.store.description }}</textarea>
+      </div>
+
+      <!-- Payout Method -->
+      <div class="mb-4">
+        <label class="form-label">Payout Method (Optional)</label>
+        <input type="text" name="payout_method" class="form-control" value="{{ profile.payout_method }}">
+      </div>
+
+      <!-- Payout Email -->
+      <div class="mb-4">
+        <label class="form-label">Payout Email</label>
+        <input type="email" name="payout_email" class="form-control" required value="{{ profile.payout_email }}">
+      </div>
+
+      <!-- Country -->
+      <div class="mb-4">
+        <label class="form-label">Country</label>
+        <input type="text" name="country" class="form-control" required value="{{ profile.country }}">
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn btn-primary w-100">
+        {% if profile.is_profile_complete %}
+          Update Profile
+        {% else %}
+          Save and Continue
         {% endif %}
-
-        <form method="POST" enctype="multipart/form-data" id="profileForm" novalidate>
-            {% csrf_token %}
-
-            <!-- Profile Picture -->
-            <div class="mb-3">
-                <label>Profile Picture</label>
-                <input type="file" name="profile_picture" class="form-control" id="profilePictureInput">
-                <div class="mt-3 text-center">
-                    {% if profile.profile_picture %}
-                        <img id="profilePreview" src="{{ profile.profile_picture.url }}" alt="Profile Picture"
-                             class="img-fluid rounded" style="max-width: 200px;">
-                    {% else %}
-                        <img id="profilePreview" src="#" alt="Profile Preview"
-                             class="img-fluid rounded" style="max-width: 200px; display: none;">
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Store Name -->
-            <div class="mb-3">
-                <label>Store Name</label>
-                <input type="text" name="store_name" class="form-control" required minlength="6"
-                       value="{{ profile.store_name }}">
-                       <div class="mt-3 text-center">
-                        {% if profile.store.store_logo %}
-                            <img id="storePreview" src="{{ profile.store.store_logo.url }}" alt="logo Picture"
-                                 class="img-fluid rounded" style="max-width: 200px;">
-                        {% else %}
-                            <img id="storePreview" src="#" alt="store Preview"
-                                 class="img-fluid rounded" style="max-width: 200px; display: none;">
-                        {% endif %}
-                    </div>
-    
-            </div>
-
-            <!-- Store Logo -->
-            <div class="mb-3">
-                <label>Store Picture</label>
-                <input type="file" name="store_logo" class="form-control" id="storeLogoInput">
-                <div class="mt-3 text-center">
-                    {% if profile.store and profile.store.store_logo %}
-                        <img id="storeLogoPreview" src="{{ profile.store.store_logo.url }}" alt="Store Logo"
-                             class="img-fluid rounded" style="max-width: 200px;">
-                    {% else %}
-                        <img id="storeLogoPreview" src="#" alt="Store Logo Preview"
-                             class="img-fluid rounded" style="max-width: 200px; display: none;">
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Category -->
-            <div class="mb-3">
-                <label>Category</label>
-                <select name="category" class="form-select" required>
-                    <option value="">Select a category</option>
-                    {% for category in categories %}
-                        <option value="{{ category.slug }}"
-                            {% if profile.store and profile.store.category.slug == category.slug %}selected{% endif %}>
-                            {{ category }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- Description -->
-            <div class="mb-3">
-                <label>Description</label>
-                <textarea name="description" class="form-control" rows="3" required minlength="15">{{ profile.description }}</textarea>
-            </div>
-
-            <!-- Payout Method -->
-            <div class="mb-3">
-                <label>Payout Method (Optional)</label>
-                <input type="text" name="payout_method" class="form-control" value="{{ profile.payout_method }}">
-            </div>
-
-            <!-- Payout Email -->
-            <div class="mb-3">
-                <label>Payout Email</label>
-                <input type="email" name="payout_email" class="form-control" required value="{{ profile.payout_email }}">
-            </div>
-
-            <!-- Country -->
-            <div class="mb-3">
-                <label>Country</label>
-                <input type="text" name="country" class="form-control" required value="{{ profile.country }}">
-            </div>
-
-            <!-- Submit -->
-            <button type="submit" class="btn btn-primary w-100">
-                {% if profile.is_profile_complete %}
-                    Update Profile
-                {% else %}
-                    Save and Continue
-                {% endif %}
-            </button>
-        </form>
-    </div>
+      </button>
+    </form>
+  </div>
 </div>
 
-<!-- External Scripts -->
-<link rel="stylesheet" href="{% static 'css/merchant.css' %}">
-<script src="{% static 'js/merchant.js' %}"></script>
+<!-- Image Preview Script -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const profileInput = document.getElementById("profilePictureInput");
+    const profilePreview = document.getElementById("profilePreview");
+
+    profileInput?.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          profilePreview.src = event.target.result;
+          profilePreview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    const storeInput = document.getElementById("storeLogoInput");
+    const storePreview = document.getElementById("storeLogoPreview");
+
+    storeInput?.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          storePreview.src = event.target.result;
+          storePreview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  });
+</script>
 {% endblock %}
