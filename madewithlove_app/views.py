@@ -541,4 +541,4 @@ def add_to_cart(request, product_id):
         order_item.save()
 
     messages.success(request, f"{product.name} added to your cart!")
-    return redirect('cart')
+    return render(request,"cart.html")
