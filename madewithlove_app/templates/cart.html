@@ -1,49 +1,60 @@
 {% extends 'base.html' %}
-{% load static %}
 
 {% block title %}Shopping Cart{% endblock %}
 
 {% block content %}
 <section class="container py-5">
-  <h1 class="text-center mb-4">Your Cart</h1>
+    <h1 class="text-center mb-5">🛒 Your Cart</h1>
 
-  {% if order.items.all %}
-  <div class="table-responsive">
-    <table class="table dashboard-table">
-      <thead>
-        <tr>
-          <th scope="col">Product</th>
-          <th scope="col">Price</th>
-          <th scope="col">Quantity</th>
-          <th scope="col">Subtotal</th>
-          <th scope="col">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for item in order.items.all %}
-        <tr>
-          <td>
-            <strong>{{ item.product.name }}</strong><br>
-            <small class="text-muted">{{ item.product.description|truncatechars:40 }}</small>
-          </td>
-          <td>${{ item.price }}</td>
-          <td>{{ item.quantity }}</td>
-          <td>${{ item.quantity|multiply:item.price }}</td>
-          <td>
-            <a href="{% url 'remove_from_cart' item.id %}" class="btn btn-sm btn-outline-danger">Remove</a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+    {% if cart_items %}
+    <div class="table-responsive">
+        <table class="table dashboard-table">
+            <thead>
+                <tr>
+                    <th scope="col">Product</th>
+                    <th scope="col">Image</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Subtotal</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart_items %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>
+                        {% if item.product.images.first %}
+                        <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}" width="60" height="60">
+                        {% else %}
+                        <span class="text-muted">No image</span>
+                        {% endif %}
+                    </td>
+                    <td>${{ item.price }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>${{ item.price|floatformat:2|add:"0"|floatformat:2|floatformat:"2" }}</td>
+                    <td>
+                        <form action="{% url 'remove_from_cart' item.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-light">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-  <div class="text-end mt-4">
-    <h4 class="text-warning">Total: ${{ order.total_amount }}</h4>
-    <a href="{% url 'checkout' %}" class="btn plan-btn">Proceed to Checkout</a>
-  </div>
-  {% else %}
-  <p class="text-center text-muted">Your cart is empty.</p>
-  {% endif %}
+    <div class="text-end mt-4">
+        <h4>Total: <span class="text-warning">${{ total_price }}</span></h4>
+        <a href="{% url 'checkout' %}" class="btn cta-btn mt-3">Proceed to Checkout</a>
+    </div>
+
+    {% else %}
+    <div class="text-center">
+        <p class="text-muted">Your cart is currently empty.</p>
+        <a href="{% url 'home' %}" class="btn cta-btn mt-3">Continue Shopping</a>
+    </div>
+    {% endif %}
 </section>
 {% endblock %}
