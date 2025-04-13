@@ -341,3 +341,15 @@ def admin_dashboard_view(request):
     return render(request, 'admin_dashboard.html')
 
 
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+
+
+def confirm_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user, status='pending')
+
+    if request.method == 'POST':
+        order.status = 'confirmed'
+        order.save()
+        messages.success(request, "Your order has been confirmed!")
+        return redirect('cart')  # or wherever you want to redirect
