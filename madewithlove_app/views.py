@@ -376,44 +376,54 @@ def logout_view(request):
     request.session.flush()
     return redirect('login')
 
+@csrf_exempt  
 def add_or_edit_product(request):
     if request.method == 'POST':
+        print("🔧 DELETE FLAG:", request.POST.get('delete'))
+        print("📦 PRODUCT ID:", request.POST.get('product_id'))
         user_id = request.session.get('user_id')
         role = request.session.get('role')
 
         if role != 'merchant':
             return JsonResponse({'success': False, 'message': 'Unauthorized'})
 
-        # Get merchant profile and store
         merchant = MerchantProfile.objects.filter(user_id=user_id).first()
         if not merchant or not merchant.store:
             return JsonResponse({'success': False, 'message': 'Merchant store not found'})
 
         store = merchant.store
-        category = store.category  # Auto-assign category from store
 
-        # Get product fields
+        if request.POST.get('delete') == 'true':
+            print("🧪 DELETE detected!")
+            product_id = request.POST.get('product_id')
+            print("🧪 PRODUCT ID received:", product_id)
+            product = Product.objects.filter(id=product_id, store=store).first()
+            if product:
+                product.delete()
+                return JsonResponse({'success': True, 'message': 'Product deleted'})
+            return JsonResponse({'success': False, 'message': 'Product not found'})
+
+        # Normal Add/Edit
         product_id = request.POST.get('product_id')
         name = request.POST.get('name')
         price = request.POST.get('price')
         stock = request.POST.get('stock')
         description = request.POST.get('description')
         images = request.FILES.getlist('images')
+        category = store.category  # auto-fill category
 
         if not all([name, price, stock, description]):
             return JsonResponse({'success': False, 'message': 'Missing required fields'})
 
-        # Add or update
         if product_id:
             product = Product.objects.filter(id=product_id, store=store).first()
             if not product:
                 return JsonResponse({'success': False, 'message': 'Product not found'})
-
             product.name = name
             product.price = price
             product.stock = stock
             product.description = description
-            product.category = category  # Always update to match store
+            product.category = category
             product.save()
         else:
             product = Product.objects.create(
@@ -422,26 +432,14 @@ def add_or_edit_product(request):
                 price=price,
                 stock=stock,
                 description=description,
-                category=category  # Auto-filled
+                category=category
             )
 
-        # Save product images
         if images:
             for img in images:
                 ProductImage.objects.create(product=product, image=img)
 
-        return JsonResponse({'success': True, 'message': 'Product saved successfully'})
-    
-@csrf_exempt
-def delete_product(request):
-    if request.method == 'POST':
-        product_id = request.POST.get('product_id')
-        product = Product.objects.filter(id=product_id).first()
-        if product:
-            product.delete()
-            return JsonResponse({'success': True})
-        return JsonResponse({'success': False, 'message': 'Product not found'})
-    
+        return JsonResponse({'success': True, 'message': 'Product saved'})    
 
 def admin_dashboard_view(request):
     # Replace this with your actual logic

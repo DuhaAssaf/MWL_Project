@@ -67,12 +67,13 @@ document.addEventListener("DOMContentLoaded", function () {
     tableBody.innerHTML = "";
     data.forEach((p, index) => {
       const row = document.createElement("tr");
+      row.setAttribute("data-id", p.id);  // ← this line is missing!
       row.innerHTML = `
         <td><img src="${p.image}" width="50" class="img-fluid rounded" /></td>
         <td>${p.name}</td>
         <td>${p.category}</td>
         <td>$${p.price}</td>
-        <td>${p.description}</td>
+        <td>${p.stock}</td>
         <td>
           <div class="d-flex justify-content-center">
             <button class="btn btn-sm btn-warning me-2" onclick="editProduct(${index})" data-bs-toggle="modal" data-bs-target="#productModal">Edit</button>
@@ -102,7 +103,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   window.editProduct = index => {
     const p = products[index];
-    form["edit-product-id"].value = p.id || "";
+    form["edit-product-id"].value = p.id;
     form["product-name"].value = p.name;
     form["product-price"].value = p.price;
     form["product-stock"].value = p.stock;
@@ -112,10 +113,39 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   window.deleteProduct = index => {
-    if (confirm(`Delete "${products[index].name}"?`)) {
-      products.splice(index, 1);
-      applyFilters();
-      showToast("Product deleted successfully.");
+    const product = products[index];
+    if (!product.id) {
+      console.error("Missing product ID");
+      showToast("Missing product ID", false);
+      return;
+    }
+
+    if (confirm(`Delete "${product.name}"?`)) {
+      console.log("Deleting product:", product.id);
+      const formData = new FormData();
+      formData.append("product_id", product.id);
+      formData.append("delete", "true");
+
+      console.log("🧪 Sending DELETE for product_id:", product.id); // for debugging
+
+
+      fetch("/dashboard/add-edit-product/", {
+        method: "POST",
+        body: formData,
+      })
+      
+      .then(res => res.json())
+      .then(data => {
+        console.log("🧪 DELETE response:", data);
+        if (data.success) {
+          showToast("Product deleted");
+          window.location.reload();
+        } else {
+          showToast(data.message || "Error deleting product", false);
+        }
+      })
+      .catch(() => showToast("Delete failed", false));
+
     }
   };
 
@@ -134,6 +164,7 @@ document.addEventListener("DOMContentLoaded", function () {
         form.reset();
         previewImg.style.display = "none";
         bootstrap.Modal.getInstance(document.getElementById("productModal")).hide();
+        window.location.reload();  // Refresh table to reflect changes
       } else {
         showToast(data.message || "Error occurred.", false);
         console.error("Server error:", data);
@@ -143,6 +174,8 @@ document.addEventListener("DOMContentLoaded", function () {
       console.error("Fetch error:", error);
       showToast("Something went wrong.", false);
     });
+  };
+
   imageInput.addEventListener("change", () => {
     const file = imageInput.files[0];
     if (file) {
@@ -174,14 +207,16 @@ document.addEventListener("DOMContentLoaded", function () {
   function extractInitialProducts() {
     products = [];
     document.querySelectorAll("#product-table tr").forEach(row => {
+      const id = row.getAttribute("data-id");
       const cols = row.querySelectorAll("td");
       if (cols.length < 5) return;
       const image = cols[0].querySelector("img")?.src || "";
       const name = cols[1].textContent.trim();
       const category = cols[2].textContent.trim();
       const price = cols[3].textContent.replace("$", "").trim();
+      const stock = cols[4].textContent.trim();
       const description = cols[4].textContent.trim();
-      products.push({ name, category, price, image, description });
+      products.push({ id, name, category, price, stock, image, description });
     });
   }
 

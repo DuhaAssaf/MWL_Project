@@ -47,7 +47,7 @@
       </thead>
       <tbody id="product-table">
         {% for product in products %}
-        <tr data-name="{{ product.name }}" data-category="{{ product.category }}">
+        <tr data-name="{{ product.name }}" data-category="{{ product.category }}" data-id="{{ product.id }}">
           <td>
             {% for img in product.images.all %}
               <img src="{{ img.image.url }}" width="50" class="img-thumbnail me-1" />
