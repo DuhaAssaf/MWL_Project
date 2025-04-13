@@ -539,6 +539,6 @@ def add_to_cart(request, product_id):
     if not item_created:
         order_item.quantity += 1
         order_item.save()
-
+  
     messages.success(request, f"{product.name} added to your cart!")
     return redirect("add_to_cart")
