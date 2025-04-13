@@ -202,3 +202,87 @@ document.addEventListener("DOMContentLoaded", function () {
   updateCategoryDropdown();
   applyFilters();
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+  if (typeof redirectUrl !== "undefined") {
+      setTimeout(function () {
+          window.location.href = redirectUrl;
+      }, 3000);
+  }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  const profileForm = document.getElementById("profileForm");
+
+  if (profileForm) {
+      profileForm.addEventListener("submit", function (e) {
+          const storeName = this.store_name.value.trim();
+          const description = this.description.value.trim();
+
+          if (storeName.length < 6) {
+              alert("Store name must be more than 5 characters.");
+              e.preventDefault();
+          }
+
+          if (description.length < 15) {
+              alert("Description must be more than 15 characters.");
+              e.preventDefault();
+          }
+      });
+  }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  const profileForm = document.getElementById("profileForm");
+
+  if (profileForm) {
+      profileForm.addEventListener("submit", function (e) {
+          const storeName = this.store_name.value.trim();
+          const description = this.description.value.trim();
+
+          if (storeName.length < 6) {
+              alert("Store name must be more than 5 characters.");
+              e.preventDefault();
+          }
+
+          if (description.length < 15) {
+              alert("Description must be more than 15 characters.");
+              e.preventDefault();
+          }
+      });
+  }
+
+
+  const profileInput = document.getElementById("profilePictureInput");
+  const profilePreview = document.getElementById("profilePreview");
+  const storeInput = document.getElementById("storeLogoInput");
+  const storePreview = document.getElementById("storeLogoPreview");
+
+  if (profileInput) {
+      profileInput.addEventListener("change", (e) => {
+          const file = e.target.files[0];
+          if (file) {
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                  profilePreview.src = event.target.result;
+                  profilePreview.style.display = "block";
+              };
+              reader.readAsDataURL(file);
+          }
+      });
+  }
+
+  if (storeInput) {
+      storeInput.addEventListener("change", (e) => {
+          const file = e.target.files[0];
+          if (file) {
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                  storePreview.src = event.target.result;
+                  storePreview.style.display = "block";
+              };
+              reader.readAsDataURL(file);
+          }
+      });
+  }
+});

@@ -1,8 +1,29 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.contrib.auth.base_user import BaseUserManager
 
+class CustomUserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError("Email is required")
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)  # works with Django auth
+        user.save(using=self._db)
+        return user
 
-class User(models.Model):
+    def create_superuser(self, email, password, **extra_fields):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("is_active", True)
+
+        return self.create_user(email, password, **extra_fields)
+
+    def get_by_natural_key(self, email):
+        return self.get(email=email)
+
+class User(AbstractBaseUser, PermissionsMixin):
     ROLE_CHOICES = [
         ('admin', 'Admin'),
         ('merchant', 'Merchant'),
@@ -15,46 +36,65 @@ class User(models.Model):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     full_name = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
+    last_login = models.DateTimeField(blank=True, null=True)
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['full_name']
     date_joined = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
+    objects = CustomUserManager()
 
     def __str__(self):
         return self.username
 
 class Category(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    CATEGORY_CHOICES = [
+            ('fashion', 'Fashion & Apparel'),
+            ('electronics', 'Electronics & Gadgets'),
+            ('beauty', 'Beauty & Personal Care'),
+            ('handmade', 'Handmade & Crafts'),
+            ('food', 'Food & Specialty'),
+            ('books', 'Books & Stationery'),
+            ('home', 'Home & Kitchen'),
+            ('local', 'Local & Cultural'),
+            ('other','other'),
+        ]
+
+    slug = models.CharField(max_length=50, unique=True, choices=CATEGORY_CHOICES, default='other')
 
     def __str__(self):
-        return self.name
-
+        return dict(self.CATEGORY_CHOICES).get(self.slug, self.slug)
 
 class MerchantProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
-    store_name = models.CharField(max_length=100)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
-    description = models.TextField()
-    payout_method = models.CharField(max_length=50)
+    payout_method = models.CharField(max_length=50,null=True,blank=True)
     payout_email = models.EmailField()
     country = models.CharField(max_length=100)
+    is_profile_complete = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at=models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.store_name
-    
+        return self.country
     
 class Store(models.Model):
-    merchant = models.OneToOneField(MerchantProfile, on_delete=models.CASCADE, related_name='store')
-    slug = models.SlugField(unique=True)
-    is_active = models.BooleanField(default=True)
+    merchant = models.OneToOneField(MerchantProfile, on_delete=models.CASCADE, related_name='store' , null=True)
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    slug = models.SlugField(unique=True,null=True)
+    is_store_active = models.BooleanField(default=True)
     store_logo = models.ImageField(upload_to='store_logos/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at=models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.merchant.store_name
-
+        return self.name
 
 class Product(models.Model):
-    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='products')
+    store=models.ForeignKey(Store, on_delete=models.CASCADE, related_name='product', null=True)
     name = models.CharField(max_length=100)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     description = models.TextField()
@@ -66,10 +106,9 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
-
 class ProductImage(models.Model):
+    
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    merchant = models.ForeignKey(MerchantProfile, on_delete=models.CASCADE, related_name='product_images')
     image = models.ImageField(upload_to='product_images/')
 
     def __str__(self):
@@ -79,7 +118,6 @@ class ProductImage(models.Model):
 class CustomerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)  # Add this line
-    phone = models.CharField(max_length=20, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     wishlist = models.ManyToManyField(Product, blank=True, related_name='wishlisted_by')
     joined_at = models.DateTimeField(auto_now_add=True)
