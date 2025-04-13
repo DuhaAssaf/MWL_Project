@@ -1,0 +1,17 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-5">Admin Control Panel</h1>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for section in sections %}
+        <div class="col">
+            <div class="card shadow-sm h-100">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <h5 class="card-title">{{ section.name }}</h5>
+                    <a href="{{ section.link }}" class="btn btn-primary mt-3">Manage</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

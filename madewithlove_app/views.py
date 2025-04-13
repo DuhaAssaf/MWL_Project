@@ -503,3 +503,24 @@ def get_merchant_products(request):
     return JsonResponse({'success': True, 'products': data})
 
 
+
+@staff_member_required
+def admin_dashboard(request):
+    sections = [
+        {'name': 'Users', 'link': '/admin/madewithlove_app/user/'},
+        {'name': 'Merchants', 'link': '/admin/madewithlove_app/merchantprofile/'},
+        {'name': 'Stores', 'link': '/admin/madewithlove_app/store/'},
+        {'name': 'Products', 'link': '/admin/madewithlove_app/product/'},
+        {'name': 'Product Images', 'link': '/admin/madewithlove_app/productimage/'},
+        {'name': 'Customers', 'link': '/admin/madewithlove_app/customerprofile/'},
+        {'name': 'Recently Viewed', 'link': '/admin/madewithlove_app/recentlyviewedproduct/'},
+        {'name': 'Orders', 'link': '/admin/madewithlove_app/order/'},
+        {'name': 'Order Items', 'link': '/admin/madewithlove_app/orderitem/'},
+        {'name': 'Reviews', 'link': '/admin/madewithlove_app/review/'},
+        {'name': 'Notifications', 'link': '/admin/madewithlove_app/notification/'},
+        {'name': 'Discounts', 'link': '/admin/madewithlove_app/discount/'},
+        {'name': 'Categories', 'link': '/admin/madewithlove_app/category/'},
+        {'name': 'Subscriptions', 'link': '/admin/madewithlove_app/subscription/'},
+    ]
+    return render(request, 'admin_dashboard.html', {'sections': sections})
+
