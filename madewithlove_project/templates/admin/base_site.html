@@ -1,0 +1,55 @@
+{% extends "admin/base.html" %} {% load static %} {% block title %}MWL Admin{%
+endblock %} {% block branding %}
+<div style="display: flex; align-items: center; gap: 10px">
+    <img src="{% staticfiles 'images/mwl_logo.png' %}" alt="MWL Logo" height="40" />
+    <h1 style="
+        font-family: 'Cairo', sans-serif;
+        color: #ff4d4d;
+        font-size: 28px;
+        margin: 0;
+    ">
+        MWL Admin Panel
+    </h1>
+</div>
+{% endblock %} {% block extrastyle %}
+<style>
+    body {
+        background-color: #f5f9ff !important;
+        font-family: "Cairo", sans-serif;
+    }
+
+    #header {
+        background-color: #ffffff !important;
+        border-bottom: 2px solid #ddd;
+        padding: 10px 30px;
+    }
+
+    #user-tools {
+        color: #333 !important;
+        font-weight: bold;
+    }
+
+    a {
+        color: #007bff !important;
+    }
+
+    .module caption {
+        font-size: 18px;
+        font-weight: 600;
+        color: #444;
+    }
+
+    .submit-row input {
+        background-color: #007bff !important;
+        color: white !important;
+        font-weight: bold;
+        border-radius: 6px;
+        border: none;
+        padding: 8px 16px;
+    }
+
+    .submit-row input:hover {
+        background-color: #0056b3 !important;
+    }
+</style>
+{% endblock %}

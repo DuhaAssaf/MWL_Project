@@ -13,6 +13,8 @@ from django.contrib.auth import login
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
+from django.contrib.auth.hashers import check_password
+
 
 def homepage(request):
     return render(request, 'homepage.html')
@@ -346,7 +348,7 @@ def login_view(request):
 
         user = User.objects.filter(username=identifier).first() or User.objects.filter(email=identifier).first()
 
-        if user and bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
+        if user and check_password(password, user.password):
             user.backend = 'django.contrib.auth.backends.ModelBackend'
             login(request, user)
             # ✅ Set session values
@@ -504,8 +506,11 @@ def get_merchant_products(request):
 
 
 
-@staff_member_required
+@login_required
 def admin_dashboard(request):
+    if request.user.role != 'admin':
+        return redirect('home')  
+
     sections = [
         {'name': 'Users', 'link': '/admin/madewithlove_app/user/'},
         {'name': 'Merchants', 'link': '/admin/madewithlove_app/merchantprofile/'},

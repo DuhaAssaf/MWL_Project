@@ -32,6 +32,12 @@
       <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
         <ul class="navbar-nav">
           <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+          {% if user.is_authenticated and user.role == 'admin' %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'admin_dashboard' %}">Admin Panel</a>
+          </li>
+          {% endif %}
+
 
           <!-- Discover Dropdown -->
           <li class="nav-item dropdown">
@@ -48,7 +54,7 @@
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="navbarUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <img src="{% if profile_picture_url %}{{ profile_picture_url }}{% else %}{% static 'images/default-profile.png' %}{% endif %}"
-                     alt="Profile" width="32" height="32" class="rounded-circle" style="object-fit: cover;">
+                    alt="Profile" width="32" height="32" class="rounded-circle" style="object-fit: cover;">
                 {{ request.session.username|default:"User" }}
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
