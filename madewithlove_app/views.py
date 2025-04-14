@@ -635,3 +635,24 @@ def customer_profile_required(view_func):
                 return redirect('create_customer_profile')
         return view_func(request, *args, **kwargs)
     return wrapper
+
+
+@login_required
+@customer_profile_required
+def customer_dashboard(request):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return redirect('login')
+
+    try:
+        user = User.objects.get(id=user_id)
+        if user.role != 'customer':
+            return redirect('merchant_dashboard')
+
+        customer_profile = CustomerProfile.objects.filter(user=user).first()
+        return render(request, 'dashboards/customer_dashboard.html', {
+            'user': user,
+            'customer_profile': customer_profile,
+        })
+    except User.DoesNotExist:
+        return redirect('login')
