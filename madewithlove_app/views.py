@@ -287,7 +287,7 @@ def register_view(request):
         user.backend = 'django.contrib.auth.backends.ModelBackend'
         login(request, user)
 
-        # ✅ Set session
+        #  Set session
         request.session['user_id'] = user.id
         request.session['username'] = user.username
         request.session['full_name'] = user.full_name
@@ -351,13 +351,13 @@ def login_view(request):
         if user and check_password(password, user.password):
             user.backend = 'django.contrib.auth.backends.ModelBackend'
             login(request, user)
-            # ✅ Set session values
+            #  Set session values
             request.session['user_id'] = user.id
             request.session['username'] = user.username
             request.session['full_name'] = user.full_name
             request.session['role'] = user.role
 
-            # ✅ Handle profile picture
+            #  Handle profile picture
             default_url = '/static/img/default-profile.png'
             profile_url = None
 
@@ -368,7 +368,7 @@ def login_view(request):
 
                 request.session['profile_picture_url'] = profile_url or default_url
 
-                # ✅ Merchant: check profile completion
+                #  Merchant: check profile completion
                 if not profile or not profile.is_profile_complete:
                     return redirect('merchant_setup')
                 return redirect('merchant_dashboard')
