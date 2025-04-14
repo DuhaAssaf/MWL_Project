@@ -13,7 +13,8 @@ from django.contrib.auth import login
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
-from django.contrib.auth.hashers import check_password
+from django.contrib.auth.hashers import check_password,make_password
+
 
 
 def homepage(request):
@@ -247,15 +248,14 @@ def storefront_by_slug(request, slug):
 
 def register_view(request):
     if request.method == 'POST':
-        username = request.POST.get('username').strip()
-        full_name = request.POST.get('full_name').strip()
+        username = request.POST.get('username', '').strip()
+        full_name = request.POST.get('full_name', '').strip()
         role = request.POST.get('role')
-        email = request.POST.get('email').strip()
+        email = request.POST.get('email', '').strip()
         phone_number = request.POST.get('phone_number', '').strip()
         password1 = request.POST.get('password1')
         password2 = request.POST.get('password2')
 
-        # Validate fields
         if not all([username, full_name, role, email, password1, password2]):
             return render(request, 'register.html', {'error': 'All required fields must be filled out.'})
 
@@ -271,23 +271,19 @@ def register_view(request):
         if User.objects.filter(email=email).exists():
             return render(request, 'register.html', {'error': 'Email already registered.'})
 
-        # Hash password
-        hashed_password = bcrypt.hashpw(password1.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-        # Create user
-        user = User.objects.create(
+        #  Create user with set_password
+        user = User(
             username=username,
             email=email,
             full_name=full_name,
             phone_number=phone_number,
-            password=hashed_password,
             role=role,
         )
+        user.set_password(password1)
+        user.save()
 
-        user.backend = 'django.contrib.auth.backends.ModelBackend'
         login(request, user)
 
-        #  Set session
         request.session['user_id'] = user.id
         request.session['username'] = user.username
         request.session['full_name'] = user.full_name
@@ -297,8 +293,7 @@ def register_view(request):
         profile_url = None
 
         if role == 'merchant':
-            # Create empty merchant profile if not exists
-            profile, created = MerchantProfile.objects.get_or_create(user=user)
+            profile, _ = MerchantProfile.objects.get_or_create(user=user)
             if profile.profile_picture:
                 profile_url = profile.profile_picture.url
             request.session['profile_picture_url'] = profile_url or default_url
@@ -308,13 +303,13 @@ def register_view(request):
             return redirect('merchant_dashboard')
 
         elif role == 'customer':
-            profile, created = CustomerProfile.objects.get_or_create(user=user)
+            profile, _ = CustomerProfile.objects.get_or_create(user=user)
             if profile.profile_picture:
                 profile_url = profile.profile_picture.url
             request.session['profile_picture_url'] = profile_url or default_url
             return redirect('explore')
 
-        return redirect('login')  # fallback
+        return redirect('login')
 
     return render(request, 'register.html')
 
@@ -342,22 +337,20 @@ def customer_dashboard(request):
 
 def login_view(request):
     if request.method == 'POST':
-        identifier = request.POST.get('username')  # Username or Email
+        identifier = request.POST.get('username')
         password = request.POST.get('password')
-        remember_me = request.POST.get('remember_me') == 'on'
 
         user = User.objects.filter(username=identifier).first() or User.objects.filter(email=identifier).first()
 
         if user and check_password(password, user.password):
             user.backend = 'django.contrib.auth.backends.ModelBackend'
             login(request, user)
-            #  Set session values
+
             request.session['user_id'] = user.id
             request.session['username'] = user.username
             request.session['full_name'] = user.full_name
             request.session['role'] = user.role
 
-            #  Handle profile picture
             default_url = '/static/img/default-profile.png'
             profile_url = None
 
@@ -365,10 +358,8 @@ def login_view(request):
                 profile = MerchantProfile.objects.filter(user=user).first()
                 if profile and profile.profile_picture:
                     profile_url = profile.profile_picture.url
-
                 request.session['profile_picture_url'] = profile_url or default_url
 
-                #  Merchant: check profile completion
                 if not profile or not profile.is_profile_complete:
                     return redirect('merchant_setup')
                 return redirect('merchant_dashboard')
@@ -377,17 +368,14 @@ def login_view(request):
                 profile = CustomerProfile.objects.filter(user=user).first()
                 if profile and profile.profile_picture:
                     profile_url = profile.profile_picture.url
-
                 request.session['profile_picture_url'] = profile_url or default_url
                 return redirect('explore')
 
             elif user.role == 'admin':
-                return redirect('/admin/')  # Optional: or use custom admin dashboard
+                return redirect('/admin/')
 
-            # Fallback (safety net)
             return redirect('login')
 
-        # Invalid password or user not found
         error_message = 'Invalid password.' if user else 'User not found.'
         return render(request, 'login.html', {'error': error_message})
 
@@ -439,7 +427,7 @@ def add_or_edit_product(request):
         stock = request.POST.get('stock')
         description = request.POST.get('description')
         images = request.FILES.getlist('images')
-        category = store.category  # auto-fill category
+        category = store.category  
 
         if not all([name, price, stock, description]):
             return JsonResponse({'success': False, 'message': 'Missing required fields'})
@@ -471,7 +459,6 @@ def add_or_edit_product(request):
         return JsonResponse({'success': True, 'message': 'Product saved'})
 
 def admin_dashboard_view(request):
-    # Replace this with your actual logic
     return render(request, 'admin_dashboard.html')
 
 @login_required

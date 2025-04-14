@@ -17,9 +17,10 @@
         <div class="row g-0">
           <div class="col-md-4">
             {% if store.store_logo %}
-              <img src="{{ store.store_logo.url }}" class="img-fluid h-100 object-fit-cover" alt="Store Logo">
+            <img src="{{ store.store_logo.url }}" class="img-fluid h-100 object-fit-cover" alt="Store Logo">
             {% else %}
-              <img src="{% static 'images/default-store.png' %}" class="img-fluid h-100 object-fit-cover" alt="Default Store Logo">
+            <img src="{% static 'images/default-store.png' %}" class="img-fluid h-100 object-fit-cover"
+              alt="Default Store Logo">
             {% endif %}
           </div>
           <div class="col-md-8">
@@ -33,14 +34,16 @@
                 <strong class="text-warning">Products:</strong>
                 <ul class="list-group list-group-flush mt-2">
                   {% for product in store.products %}
-                  <li class="list-group-item bg-transparent text-light d-flex align-items-center justify-content-between">
+                  <li
+                    class="list-group-item bg-transparent text-light d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center gap-2">
                       {% with product.images.first as img %}
-                        {% if img %}
-                          <img src="{{ img.image.url }}" width="40" height="40" class="rounded" alt="Product Image">
-                        {% else %}
-                          <img src="{% static 'images/default-product.png' %}" width="40" height="40" class="rounded" alt="Default">
-                        {% endif %}
+                      {% if img %}
+                      <img src="{{ img.image.url }}" width="40" height="40" class="rounded" alt="Product Image">
+                      {% else %}
+                      <img src="{% static 'images/default-product.png' %}" width="40" height="40" class="rounded"
+                        alt="Default">
+                      {% endif %}
                       {% endwith %}
 
                       <div>
@@ -51,16 +54,16 @@
 
                     <div class="text-end">
                       {% if product.stock == 0 %}
-                        <span class="badge bg-secondary">Out of Stock</span>
+                      <span class="badge bg-secondary">Out of Stock</span>
                       {% elif not role %}
-                        <a href="{% url 'login' %}" class="btn btn-sm btn-outline-light">Login to Order</a>
+                      <a href="{% url 'login' %}" class="btn btn-sm btn-outline-light">Login to Order</a>
                       {% elif role == 'customer' or role == 'merchant' and store.id != user_store_id %}
-                        <button class="btn btn-sm plan-btn"
-                          onclick="openOrderModal({{ product.id }}, '{{ product.name }}', {{ product.price }}, {{ product.stock }})">
-                          Add to Cart
-                        </button>
+                      <button class="btn btn-sm plan-btn"
+                        onclick="openOrderModal({{ product.id }}, '{{ product.name }}', {{ product.price }}, {{ product.stock }})">
+                        Add to Cart
+                      </button>
                       {% elif role == 'merchant' and store.id == user_store_id %}
-                        <span class="text-muted small">Your Store</span>
+                      <span class="text-muted small">Your Store</span>
                       {% endif %}
                     </div>
                   </li>
