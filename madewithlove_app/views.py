@@ -626,3 +626,12 @@ def create_customer_profile(request):
         return redirect('customer_dashboard')
 
     return render(request, 'customers/create_profile.html')
+
+
+def customer_profile_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if request.user.role == 'customer':
+            if not CustomerProfile.objects.filter(user=request.user).exists():
+                return redirect('create_customer_profile')
+        return view_func(request, *args, **kwargs)
+    return wrapper
