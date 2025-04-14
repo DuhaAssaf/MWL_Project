@@ -4,67 +4,91 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="hero-section text-center">
-    <div class="container">
-    <h1 class="display-4 fw-bold">Launch Your Store Effortlessly</h1>
-    <p class="lead mt-3">Create beautiful, customizable online stores and start selling instantly.</p>
-    <a href="{% url 'plans' %}" class="btn mt-4 hero-btn">Get Started</a>
-    </div>
+<section class="hero-section text-center py-5 bg-dark text-light">
+  <div class="container">
+    {% if request.session.user_id %}
+      {% if request.session.role == 'merchant' %}
+        <h1 class="display-5 fw-bold">Welcome back, {{ request.session.username }} 👋</h1>
+        <p class="lead">Manage your store, track your products, and grow your business.</p>
+        <a href="{% url 'merchant_dashboard' %}" class="btn btn-warning btn-lg mt-3">Go to Dashboard</a>
+      {% elif request.session.role == 'customer' %}
+        <h1 class="display-5 fw-bold">Hi {{ request.session.username }}! 🛍️</h1>
+        <p class="lead">Ready to explore amazing handcrafted products?</p>
+        <a href="{% url 'explore' %}" class="btn btn-warning btn-lg mt-3">Start Shopping</a>
+      {% elif request.session.role == 'admin' %}
+        <h1 class="display-5 fw-bold">Welcome Admin {{ request.session.username }} 🔧</h1>
+        <p class="lead">Access control panels and manage the platform effectively.</p>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-warning btn-lg mt-3">Admin Panel</a>
+      {% endif %}
+    {% else %}
+      <h1 class="display-4 fw-bold">Launch Your Store Effortlessly</h1>
+      <p class="lead mt-3">Create beautiful, customizable online stores and start selling instantly.</p>
+      <a href="{% url 'plans' %}" class="btn mt-4 hero-btn">Get Started</a>
+    {% endif %}
+  </div>
 </section>
 
 <!-- Features -->
 <section class="text-center mt-5">
-    <div class="container">
+  <div class="container">
     <h2 class="fw-bold mb-5">Why Choose Made With Love?</h2>
     <div class="row g-4">
-        <div class="col-md-4">
-        <div class="p-4 feature-box rounded">
-            <h5>Easy Setup</h5>
-            <p>No coding needed. Set up your store in just a few clicks.</p>
+      <div class="col-md-4">
+        <div class="p-4 feature-box rounded bg-body-secondary text-dark h-100 border">
+          <h5 class="text-uppercase fw-bold">Easy Setup</h5>
+          <p>No coding needed. Set up your store in just a few clicks.</p>
         </div>
+      </div>
+      <div class="col-md-4">
+        <div class="p-4 feature-box rounded bg-body-secondary text-dark h-100 border">
+          <h5 class="text-uppercase fw-bold">Affordable Plans</h5>
+          <p>Flexible monthly or yearly plans to suit your budget.</p>
         </div>
-        <div class="col-md-4">
-        <div class="p-4 feature-box rounded">
-            <h5>Affordable Plans</h5>
-            <p>Flexible monthly or yearly plans to suit your budget.</p>
+      </div>
+      <div class="col-md-4">
+        <div class="p-4 feature-box rounded bg-body-secondary text-dark h-100 border">
+          <h5 class="text-uppercase fw-bold">Secure Payments</h5>
+          <p>Integrated payment gateways ensure smooth transactions.</p>
         </div>
-        </div>
-        <div class="col-md-4">
-        <div class="p-4 feature-box rounded">
-            <h5>Secure Payments</h5>
-            <p>Integrated payment gateways ensure smooth transactions.</p>
-        </div>
-        </div>
+      </div>
     </div>
-    </div>
+  </div>
 </section>
 
 <!-- How It Works -->
-<section class="text-center mt-5 how-it-works">
-    <div class="container">
+<section class="text-center mt-5">
+  <div class="container">
     <h2 class="fw-bold mb-5">How It Works</h2>
     <div class="row g-4">
-        <div class="col-md-4">
-        <h5>1. Register</h5>
-        <p>Create your merchant account in seconds.</p>
+      <div class="col-md-4">
+        <div class="p-4 rounded bg-dark text-light border h-100">
+          <h5 class="text-uppercase">1. Register</h5>
+          <p>Create your merchant account in seconds.</p>
         </div>
-        <div class="col-md-4">
-        <h5>2. Pick a Plan</h5>
-        <p>Select a subscription that fits your business needs.</p>
+      </div>
+      <div class="col-md-4">
+        <div class="p-4 rounded bg-dark text-light border h-100">
+          <h5 class="text-uppercase">2. Pick a Plan</h5>
+          <p>Select a subscription that fits your business needs.</p>
         </div>
-        <div class="col-md-4">
-        <h5>3. Build Your Store</h5>
-        <p>Customize, add products, and go live.</p>
+      </div>
+      <div class="col-md-4">
+        <div class="p-4 rounded bg-dark text-light border h-100">
+          <h5 class="text-uppercase">3. Build Your Store</h5>
+          <p>Customize, add products, and go live.</p>
         </div>
+      </div>
     </div>
-    </div>
+  </div>
 </section>
 
 <!-- CTA -->
+{% if not request.session.user_id %}
 <section class="text-center mt-5">
-    <div class="container">
+  <div class="container">
     <h2 class="fw-bold mb-3">Start Your Online Store Today</h2>
     <a href="{% url 'register' %}" class="btn btn-success btn-lg cta-btn">Join Now</a>
-    </div>
+  </div>
 </section>
+{% endif %}
 {% endblock %}

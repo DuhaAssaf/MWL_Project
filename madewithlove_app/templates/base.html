@@ -70,22 +70,6 @@
       </div>
     </div>
   </nav>
-
-  <!-- Welcome Banner -->
-  {% if request.session.user_id %}
-  <section class="bg-light py-3 border-bottom border-warning">
-    <div class="container text-center">
-      {% if request.session.role == 'merchant' %}
-        <h5 class="text-dark mb-0">👋 Welcome back, <strong>{{ request.session.username }}</strong>! Ready to manage your store?</h5>
-      {% elif request.session.role == 'customer' %}
-        <h5 class="text-dark mb-0">🛍️ Hello <strong>{{ request.session.username }}</strong>! Let's discover something new today.</h5>
-      {% elif request.session.role == 'admin' %}
-        <h5 class="text-dark mb-0">🛠️ Welcome Admin <strong>{{ request.session.username }}</strong>! Everything under control?</h5>
-      {% endif %}
-    </div>
-  </section>
-  {% endif %}
-
   <!-- Main Content -->
   <main class="container py-5">
     {% block content %}{% endblock %}
@@ -118,7 +102,8 @@
             <li><a href="{% url 'home' %}" class="footer-link text-light">Home</a></li>
             <li><a href="{% url 'plans' %}" class="footer-link text-light">Plans</a></li>
             {% if not request.session.user_id %}
-              <li><a href="{% url 'login' %}" class="footer-link text-light">Login</a> / <a href="{% url 'register' %}" class="footer-link text-light">Register</a></li>
+              <li><a href="{% url 'login' %}" class="footer-link text-light">Login</a></li>
+              <li><a href="{% url 'register' %}" class="footer-link text-light">Register</a></li>
             {% endif %}
             {% if request.session.user_id and request.session.role == 'merchant' %}
               <li><a href="{% url 'merchant_profile' %}" class="footer-link text-light">My Profile</a></li>
