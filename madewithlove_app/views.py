@@ -656,3 +656,20 @@ def customer_dashboard(request):
         })
     except User.DoesNotExist:
         return redirect('login')
+    
+
+@login_required
+def view_cart(request):
+    if request.user.role != 'customer':
+        messages.error(request, "Only customers can access the cart.")
+        return redirect('home')
+
+    customer = get_object_or_404(CustomerProfile, user=request.user)
+    cart_items = CartItem.objects.filter(customer=customer)
+
+    total = sum(item.product.price * item.quantity for item in cart_items)
+
+    return render(request, 'cart/view_cart.html', {
+        'cart_items': cart_items,
+        'total': total
+    })
