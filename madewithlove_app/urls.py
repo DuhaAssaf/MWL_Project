@@ -16,7 +16,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/merchant/', views.merchant_dashboard_view, name='merchant_dashboard'),
     path('dashboard/customer/', views.customer_dashboard, name='customer_dashboard'),
-    path("dashboard/add-edit-product/", views.add_or_edit_product, name="add_product"),
-    path("dashboard/products/json/", views.get_merchant_products, name="merchant_products_json"),
     path('add-to-cart/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
+      path('remove-from-cart/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
+      path('cart/', views.cart_view, name='cart_view')
     ]

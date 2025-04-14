@@ -56,10 +56,7 @@
             onclick="openOrderModal({{ product.id }}, '{{ product.name }}', {{ product.price }}, {{ product.stock }})">
             View Details
           </button>
-          <button class="btn btn-sm plan-btn"
-          onclick="openOrderModal({{ product.id }}, '{{ product.name }}', {{ product.price }}, {{ product.stock }})">
-          <a href="{% url 'add_to_cart' product.id %}">Add To Cart</a>
-        </button>
+      
         {% elif role == 'merchant' %}
           {% if store_id != user_store_id %}
          
@@ -106,7 +103,7 @@
       <form id="orderForm">
         {% csrf_token %}
         <div class="modal-header">
-          <h5 class="modal-title" id="orderModalLabel">Order Product</h5>
+          <h5 class="modal-title" id="orderModalLabel">Order Product {{product.id}}</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
@@ -118,7 +115,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-dark">Confirm Order</button>
+          <button type="submit" class="btn btn-dark">Add To Cart</button>
         </div>
       </form>
     </div>

@@ -27,7 +27,18 @@ def plans(request):
     ]
     return render(request, 'plans.html', {"plans": plans})
 
+def merchant_profile_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if request.user.is_authenticated and request.user.role == 'merchant':
+            profile_exists = MerchantProfile.objects.filter(user=request.user).exists()
+            if not profile_exists:
+                return redirect('create_merchant_profile')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
 @login_required
+@merchant_profile_required
 def merchant_dashboard_view(request):
     user = request.user
 
@@ -59,7 +70,6 @@ def merchant_dashboard_view(request):
     }
 
     return render(request, 'dashboards/merchant_dashboard.html', context)
-
 
 def customer_dashboard(request):
     return HttpResponse("Welcome to the Customer Dashboard!")
@@ -103,11 +113,11 @@ def explore_all_stores(request):
         "query": query,
         "role": role,
         "user_store_id": user_store_id,
-        "page_obj": page_obj
+        "page_obj": page_obj,
+        "product":Product.objects.all()
     }
  
     return render(request, "explore.html", context)
-
 
 @login_required
 def merchant_setup_view(request):
@@ -547,26 +557,43 @@ def confirm_order(request, order_id):
         return redirect('cart')  # or wherever you want to redirect
     
 
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Product, Order, OrderItem
+
 @login_required
 def add_to_cart(request, product_id):
-    customer = get_object_or_404(CustomerProfile, user=request.user)
     product = get_object_or_404(Product, id=product_id)
 
-    # Get or create a pending order
-    order, created = Order.objects.get_or_create(
-        customer=customer, status='pending',
-        defaults={'shipping_address': customer.address or 'To be added later'}
-    )
+    # Get or create an active order for the user
+    order, created = Order.objects.get_or_create(user=request.user, status='pending')
 
-    # Add or update item in order
-    order_item, item_created = OrderItem.objects.get_or_create(
-        order=order, product=product,
-        defaults={'price': product.price, 'quantity': 1}
-    )
+    # Check if the product is already in the order
+    order_item, item_created = OrderItem.objects.get_or_create(order=order, product=product)
 
     if not item_created:
+        # If the item already exists, increment the quantity
         order_item.quantity += 1
         order_item.save()
-  
-    messages.success(request, f"{product.name} added to your cart!")
-    return render(request,"cart.html")
+
+    return redirect('cart_view')
+
+
+@login_required
+def cart_view(request):
+    order = Order.objects.filter(user=request.user, status='pending').first()
+    return render(request, 'cart.html', {'order': order})
+
+@login_required
+def remove_from_cart(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    order = get_object_or_404(Order, user=request.user, status='pending')
+    order_item = get_object_or_404(OrderItem, order=order, product=product)
+
+    if order_item.quantity > 1:
+        order_item.quantity -= 1
+        order_item.save()
+    else:
+        order_item.delete()
+
+    return redirect('cart_view')
