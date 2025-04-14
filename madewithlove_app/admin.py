@@ -3,7 +3,7 @@ from .models import (
     User, Category, MerchantProfile, Store,
     Product, ProductImage, CustomerProfile,
     Order, OrderItem, Review, Notification,
-    Discount, Subscription, RecentlyViewedProduct
+    Discount, Subscription, RecentlyViewedProduct,CartItem
 )
 
 @admin.register(User)

@@ -14,9 +14,13 @@ urlpatterns = [
     path('register/', views.register_view, name='register'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
-    path('dashboard/merchant/', views.merchant_dashboard_view, name='merchant_dashboard'),
+     path('dashboard/merchant/', views.merchant_dashboard_view, name='merchant_dashboard'),
     path('dashboard/customer/', views.customer_dashboard, name='customer_dashboard'),
-    path('add-to-cart/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
-      path('remove-from-cart/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
-      path('cart/', views.cart_view, name='cart_view')
+    path("dashboard/add-edit-product/", views.add_or_edit_product, name="add_product"),
+    path("dashboard/products/json/", views.get_merchant_products, name="merchant_products_json"),
+    path('add-to-cart/', views.add_to_cart_dynamic, name='add_to_cart_dynamic'),
+    path('customer/setup/', views.create_customer_profile, name='create_customer_profile'),
+    path('cart/', views.view_cart, name='view_cart'),
+    path('cart/update/<int:item_id>/', views.update_cart_item, name='update_cart_item'),
+    path('cart/remove/<int:item_id>/', views.remove_cart_item, name='remove_cart_item'),
     ]
