@@ -112,6 +112,9 @@ footer {
   background-color: #003f5c;
   color: #fbf2c4;
 }
+.loginreg{
+  display: flex;
+}
 
 /* Dashboard Table */
 .dashboard-table th,
