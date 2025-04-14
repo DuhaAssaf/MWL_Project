@@ -13,6 +13,8 @@ from django.contrib.auth import login
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
+from django.db.models import Prefetch
+
 
 def homepage(request):
     return render(request, 'homepage.html')
@@ -105,6 +107,8 @@ def explore_all_stores(request):
     }
  
     return render(request, "explore.html", context)
+
+
 @login_required
 def merchant_setup_view(request):
     print("User:", request.user, "| Authenticated:", request.user.is_authenticated)
