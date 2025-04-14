@@ -550,3 +550,49 @@ from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Product, Order, OrderItem
 
+@login_required
+def add_to_cart_dynamic(request):
+    if request.method == 'POST':
+        product_id = request.POST.get('product_id')
+        quantity = int(request.POST.get('quantity', 1))
+
+        product = get_object_or_404(Product, pk=product_id)
+
+        if quantity <= 0 or quantity > product.stock:
+            messages.error(request, "Invalid quantity selected.")
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+
+        user = request.user
+
+        # Handle customer orders
+        if user.role == 'customer':
+            customer = get_object_or_404(CustomerProfile, user=user)
+
+            cart_item, created = CartItem.objects.get_or_create(
+                customer=customer,
+                product=product,
+                defaults={'quantity': quantity}
+            )
+            if not created:
+                cart_item.quantity += quantity
+                if cart_item.quantity > product.stock:
+                    cart_item.quantity = product.stock
+                cart_item.save()
+
+            messages.success(request, f"{product.name} added to your cart.")
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+
+        # Handle merchant orders (only from other stores)
+        elif user.role == 'merchant':
+            merchant = get_object_or_404(MerchantProfile, user=user)
+
+            if merchant.store == product.store:
+                messages.error(request, "You cannot order from your own store.")
+                return redirect(request.META.get('HTTP_REFERER', '/'))
+
+            messages.error(request, "Merchants are not allowed to place orders.")
+            return redirect('home')
+
+        else:
+            messages.error(request, "Only customers can place orders.")
+            return redirect('home')
