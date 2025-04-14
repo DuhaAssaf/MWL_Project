@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 {% load static %}
- 
+
 {% block title %}{{ store_name }} | Storefront{% endblock %}
- 
+
 {% block content %}
 <div class="container my-5">
   <div class="text-center mb-4">
     <h2 class="text-warning fw-bold">{{ store_name }}</h2>
     <p class="text-muted">{{ store_description }}</p>
   </div>
- 
+
   <!-- Filter Section -->
   <form method="get" class="row g-3 justify-content-center mb-4">
     <div class="col-md-4">
@@ -27,7 +27,7 @@
       <button type="submit" class="btn btn-dark w-100">Filter</button>
     </div>
   </form>
- 
+
   <!-- Product Grid -->
   <div class="row g-4">
     {% for product in products %}
@@ -40,38 +40,35 @@
           <img src="{% static 'images/default-product.png' %}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="Default Product">
         {% endif %}
         {% endwith %}
-              <div class="card-body d-flex flex-column">
+        <div class="card-body d-flex flex-column">
           <h5 class="card-title">{{ product.name }}</h5>
           <p class="card-text small flex-grow-1">{{ product.description|truncatewords:20 }}</p>
         </div>
         <div class="card-footer d-flex justify-content-between align-items-center">
           <span class="fw-bold text-warning">${{ product.price }}</span>
- 
+
           {% if product.stock == 0 %}
-          <span class="badge bg-secondary">Out of Stock</span>
-        {% elif not role %}
-          <a href="{% url 'login' %}" class="btn btn-sm btn-outline-light">Login to Order</a>
-        {% elif role == 'customer' %}
-          <button class="btn btn-sm plan-btn"
-            onclick="openOrderModal({{ product.id }}, '{{ product.name }}', {{ product.price }}, {{ product.stock }})">
-            View Details
-          </button>
-      
-        {% elif role == 'merchant' %}
-          {% if store_id != user_store_id %}
-         
-     
-          {% else %}
-            <span class="text-muted small">Your Store</span>
+            <span class="badge bg-secondary">Out of Stock</span>
+
+          {% elif not role %}
+            <a href="{% url 'login' %}" class="btn btn-sm btn-outline-light">Login to Order</a>
+
+          {% elif role == 'customer' %}
+            <button class="btn btn-sm plan-btn" onclick="showProductDetails({{ product.id }}, '{{ product.name }}', '{{ product.description|escapejs }}', {{ product.price }}, {{ product.stock }})">
+              Show Details
+            </button>
+
+          {% elif role == 'merchant' %}
+            <span class="text-muted small">Only customers can order</span>
           {% endif %}
-        {% endif %}        </div>
+        </div>
       </div>
     </div>
     {% empty %}
       <p class="text-center text-muted">No products found.</p>
     {% endfor %}
   </div>
- 
+
   <!-- Pagination -->
   {% if products.has_other_pages %}
   <div class="text-center mt-4">
@@ -80,13 +77,11 @@
         {% if products.has_previous %}
           <li class="page-item"><a class="page-link" href="?page={{ products.previous_page_number }}&{{ pagination_query }}">Previous</a></li>
         {% endif %}
- 
         {% for num in products.paginator.page_range %}
           <li class="page-item {% if products.number == num %}active{% endif %}">
             <a class="page-link" href="?page={{ num }}&{{ pagination_query }}">{{ num }}</a>
           </li>
         {% endfor %}
- 
         {% if products.has_next %}
           <li class="page-item"><a class="page-link" href="?page={{ products.next_page_number }}&{{ pagination_query }}">Next</a></li>
         {% endif %}
@@ -95,30 +90,63 @@
   </div>
   {% endif %}
 </div>
- 
-<!-- Order Modal -->
-<div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
+
+<!-- Product Details Modal -->
+<div class="modal fade" id="productDetailModal" tabindex="-1" aria-labelledby="productDetailModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content dashboard-modal">
-      <form id="orderForm">
+      <form id="productDetailForm" method="POST" action="{% url 'add_to_cart_dynamic' %}">
         {% csrf_token %}
         <div class="modal-header">
-          <h5 class="modal-title" id="orderModalLabel">Order Product {{product.id}}</h5>
+          <h5 class="modal-title" id="productDetailModalLabel">Product Details</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p><strong id="orderProductName"></strong></p>
-          <input type="hidden" name="product_id" id="orderProductId">
+          <h5 id="detailProductName"></h5>
+          <p class="text-muted" id="detailProductDesc"></p>
+          <p><strong>Price:</strong> $<span id="detailProductPrice"></span></p>
+          <p><strong>Stock Left:</strong> <span id="detailProductStock"></span></p>
+          <input type="hidden" name="product_id" id="detailProductId">
           <div class="mb-3">
-            <label for="orderQuantity">Quantity</label>
-            <input type="number" class="form-control" id="orderQuantity" name="quantity" min="1" required>
+            <label for="detailQuantity">Quantity</label>
+            <input type="number" class="form-control" id="detailQuantity" name="quantity" min="1" required>
+            <div class="invalid-feedback">Please enter a valid quantity.</div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-dark">Add To Cart</button>
+          <button type="submit" class="btn btn-warning">Add to Cart</button>
         </div>
       </form>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showProductDetails(id, name, description, price, stock) {
+  document.getElementById('detailProductId').value = id;
+  document.getElementById('detailProductName').innerText = name;
+  document.getElementById('detailProductDesc').innerText = description;
+  document.getElementById('detailProductPrice').innerText = price;
+  document.getElementById('detailProductStock').innerText = stock;
+  const quantityInput = document.getElementById('detailQuantity');
+  quantityInput.value = 1;
+  quantityInput.max = stock;
+
+  const modal = new bootstrap.Modal(document.getElementById('productDetailModal'));
+  modal.show();
+}
+
+document.getElementById('productDetailForm').addEventListener('submit', function(e) {
+  const qty = parseInt(document.getElementById('detailQuantity').value);
+  const max = parseInt(document.getElementById('detailQuantity').max);
+  if (isNaN(qty) || qty <= 0 || qty > max) {
+    e.preventDefault();
+    document.getElementById('detailQuantity').classList.add('is-invalid');
+  } else {
+    document.getElementById('detailQuantity').classList.remove('is-invalid');
+  }
+});
+</script>
 {% endblock %}
