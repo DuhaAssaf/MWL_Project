@@ -546,54 +546,7 @@ def get_merchant_products(request):
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 
-
-def confirm_order(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user, status='pending')
-
-    if request.method == 'POST':
-        order.status = 'confirmed'
-        order.save()
-        messages.success(request, "Your order has been confirmed!")
-        return redirect('cart')  # or wherever you want to redirect
-    
-
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Product, Order, OrderItem
 
-@login_required
-def add_to_cart(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
-
-    # Get or create an active order for the user
-    order, created = Order.objects.get_or_create(user=request.user, status='pending')
-
-    # Check if the product is already in the order
-    order_item, item_created = OrderItem.objects.get_or_create(order=order, product=product)
-
-    if not item_created:
-        # If the item already exists, increment the quantity
-        order_item.quantity += 1
-        order_item.save()
-
-    return redirect('cart_view')
-
-
-@login_required
-def cart_view(request):
-    order = Order.objects.filter(user=request.user, status='pending').first()
-    return render(request, 'cart.html', {'order': order})
-
-@login_required
-def remove_from_cart(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
-    order = get_object_or_404(Order, user=request.user, status='pending')
-    order_item = get_object_or_404(OrderItem, order=order, product=product)
-
-    if order_item.quantity > 1:
-        order_item.quantity -= 1
-        order_item.save()
-    else:
-        order_item.delete()
-
-    return redirect('cart_view')
