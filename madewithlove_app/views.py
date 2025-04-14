@@ -70,33 +70,41 @@ def subscriptions(request):
 
 def explore_all_stores(request):
     query = request.GET.get("q", "")
-    stores = Store.objects.filter(is_store_active=True).select_related('category')
-
+    page = request.GET.get("page", 1)
+ 
+    # Prefetch products with images, only active ones
+    active_products = Prefetch(
+        "product",
+        queryset=Product.objects.filter(is_active=True).prefetch_related("images"),
+        to_attr="products"
+    )
+ 
+    stores = Store.objects.filter(is_store_active=True).select_related("category").prefetch_related(active_products)
+ 
     if query:
         stores = stores.filter(name__icontains=query)
-
-    for store in stores:
-        store.products = store.product.filter(is_active=True)  # attach products
-
+ 
+    paginator = Paginator(stores, 6)  # Show 6 stores per page
+    page_obj = paginator.get_page(page)
+ 
     user = request.user if request.user.is_authenticated else None
     role = getattr(user, 'role', None)
-
-    # Get current merchant store if logged in as merchant
+ 
     user_store_id = None
     if role == "merchant":
         merchant = MerchantProfile.objects.filter(user=user).first()
         if merchant and merchant.store:
             user_store_id = merchant.store.id
-
+ 
     context = {
-        "stores": stores,
+        "stores": page_obj,
         "query": query,
         "role": role,
         "user_store_id": user_store_id,
+        "page_obj": page_obj
     }
-
+ 
     return render(request, "explore.html", context)
-
 @login_required
 def merchant_setup_view(request):
     print("User:", request.user, "| Authenticated:", request.user.is_authenticated)
