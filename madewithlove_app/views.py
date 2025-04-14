@@ -596,3 +596,33 @@ def add_to_cart_dynamic(request):
         else:
             messages.error(request, "Only customers can place orders.")
             return redirect('home')
+        
+
+
+@login_required
+def create_customer_profile(request):
+    if request.user.role != 'customer':
+        messages.error(request, "Only customers can access this page.")
+        return redirect('home')
+
+    if CustomerProfile.objects.filter(user=request.user).exists():
+        return redirect('customer_dashboard')
+
+    if request.method == 'POST':
+        address = request.POST.get('address')
+        profile_picture = request.FILES.get('profile_picture')
+
+        if not address:
+            messages.error(request, "Address is required.")
+            return redirect('create_customer_profile')
+
+        CustomerProfile.objects.create(
+            user=request.user,
+            address=address,
+            profile_picture=profile_picture
+        )
+
+        messages.success(request, "Profile created successfully.")
+        return redirect('customer_dashboard')
+
+    return render(request, 'customers/create_profile.html')
