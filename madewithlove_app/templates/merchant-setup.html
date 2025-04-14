@@ -27,10 +27,12 @@
           <input type="file" name="profile_picture" class="form-control" id="profilePictureInput" accept="image/*">
         </div>
         <div class="col-md-4 text-center">
-          <img id="profilePreview"
-               src="{{ profile.profile_picture.url|default:'#' }}"
-               class="img-thumbnail rounded shadow-sm"
-               style="max-width: 100px; {% if not profile.profile_picture %}display:none;{% endif %}">
+          {% if profile.profile_picture %}
+            <img id="profilePreview" src="{{ profile.profile_picture.url }}"
+                 class="img-thumbnail rounded shadow-sm" style="max-width: 100px;">
+          {% else %}
+            <img id="profilePreview" src="#" class="img-thumbnail rounded shadow-sm" style="max-width: 100px; display: none;">
+          {% endif %}
         </div>
       </div>
 
@@ -38,7 +40,7 @@
       <div class="mb-4">
         <label class="form-label">Store Name</label>
         <input type="text" name="store_name" class="form-control" required minlength="6"
-               value="{{ profile.store.name|default:'' }}">
+               value="{% if request.POST.store_name %}{{ request.POST.store_name }}{% elif profile.store %}{{ profile.store.name }}{% endif %}">
       </div>
 
       <!-- Store Logo -->
@@ -48,10 +50,12 @@
           <input type="file" name="store_logo" class="form-control" id="storeLogoInput" accept="image/*">
         </div>
         <div class="col-md-4 text-center">
-          <img id="storeLogoPreview"
-               src="{{ profile.store.store_logo.url|default:'#' }}"
-               class="img-thumbnail rounded shadow-sm"
-               style="max-width: 100px; {% if not profile.store or not profile.store.store_logo %}display:none;{% endif %}">
+          {% if profile.store and profile.store.store_logo %}
+            <img id="storeLogoPreview" src="{{ profile.store.store_logo.url }}"
+                 class="img-thumbnail rounded shadow-sm" style="max-width: 100px;">
+          {% else %}
+            <img id="storeLogoPreview" src="#" class="img-thumbnail rounded shadow-sm" style="max-width: 100px; display: none;">
+          {% endif %}
         </div>
       </div>
 
@@ -62,8 +66,12 @@
           <option value="">Select a category</option>
           {% for category in categories %}
             <option value="{{ category.slug }}"
-              {% if profile.store and profile.store.category.slug == category.slug %}selected{% endif %}>
-              {{ category }}
+              {% if request.POST.category == category.slug %}
+                selected
+              {% elif profile.store and profile.store.category.slug == category.slug %}
+                selected
+              {% endif %} style="color: black;">
+              {{ category.name }}
             </option>
           {% endfor %}
         </select>
@@ -72,25 +80,28 @@
       <!-- Description -->
       <div class="mb-4">
         <label class="form-label">Description</label>
-        <textarea name="description" class="form-control" rows="3" required minlength="15">{{ profile.store.description }}</textarea>
+        <textarea name="description" class="form-control" rows="3" required minlength="15">{% if request.POST.description %}{{ request.POST.description }}{% elif profile.store %}{{ profile.store.description }}{% endif %}</textarea>
       </div>
 
       <!-- Payout Method -->
       <div class="mb-4">
         <label class="form-label">Payout Method (Optional)</label>
-        <input type="text" name="payout_method" class="form-control" value="{{ profile.payout_method }}">
+        <input type="text" name="payout_method" class="form-control"
+               value="{% if request.POST.payout_method %}{{ request.POST.payout_method }}{% else %}{{ profile.payout_method }}{% endif %}">
       </div>
 
       <!-- Payout Email -->
       <div class="mb-4">
         <label class="form-label">Payout Email</label>
-        <input type="email" name="payout_email" class="form-control" required value="{{ profile.payout_email }}">
+        <input type="email" name="payout_email" class="form-control" required
+               value="{% if request.POST.payout_email %}{{ request.POST.payout_email }}{% else %}{{ profile.payout_email }}{% endif %}">
       </div>
 
       <!-- Country -->
       <div class="mb-4">
         <label class="form-label">Country</label>
-        <input type="text" name="country" class="form-control" required value="{{ profile.country }}">
+        <input type="text" name="country" class="form-control" required
+               value="{% if request.POST.country %}{{ request.POST.country }}{% else %}{{ profile.country }}{% endif %}">
       </div>
 
       <!-- Submit -->
@@ -111,11 +122,11 @@
     const profileInput = document.getElementById("profilePictureInput");
     const profilePreview = document.getElementById("profilePreview");
 
-    profileInput?.addEventListener("change", (e) => {
+    profileInput?.addEventListener("change", function (e) {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = function (event) {
           profilePreview.src = event.target.result;
           profilePreview.style.display = "block";
         };
@@ -126,11 +137,11 @@
     const storeInput = document.getElementById("storeLogoInput");
     const storePreview = document.getElementById("storeLogoPreview");
 
-    storeInput?.addEventListener("change", (e) => {
+    storeInput?.addEventListener("change", function (e) {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = function (event) {
           storePreview.src = event.target.result;
           storePreview.style.display = "block";
         };

@@ -189,7 +189,8 @@ def merchant_setup_view(request):
     return render(request, 'merchant-setup.html', {
         'categories': categories,
         'error': error,
-        'profile': profile
+        'profile': profile,
+        'store':profile.store
     })
 
 def contact(request):

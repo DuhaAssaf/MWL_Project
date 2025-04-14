@@ -226,6 +226,9 @@ footer {
   background-color: #ffa600;
   color: #003f5c;
 }
+.btn-outline-light{
+  color: #bc5090;
+}
 .text-warning {
   color: #ffa600 !important;
 }
