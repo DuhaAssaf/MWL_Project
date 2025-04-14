@@ -13,6 +13,8 @@ from django.contrib.auth import login
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
+from django.db.models import Prefetch
+
 
 def generate_unique_slug(base_name):
     slug = slugify(base_name)
@@ -79,18 +81,26 @@ def subscriptions(request):
 
 def explore_all_stores(request):
     query = request.GET.get("q", "")
-    stores = Store.objects.filter(is_store_active=True).select_related('category')
+    page = request.GET.get("page", 1)
+
+    # Prefetch products with images, only active ones
+    active_products = Prefetch(
+        "product",
+        queryset=Product.objects.filter(is_active=True).prefetch_related("images"),
+        to_attr="products"
+    )
+
+    stores = Store.objects.filter(is_store_active=True).select_related("category").prefetch_related(active_products)
 
     if query:
         stores = stores.filter(name__icontains=query)
 
-    for store in stores:
-        store.products = store.product.filter(is_active=True)  # attach products
+    paginator = Paginator(stores, 6)  # Show 6 stores per page
+    page_obj = paginator.get_page(page)
 
     user = request.user if request.user.is_authenticated else None
     role = getattr(user, 'role', None)
 
-    # Get current merchant store if logged in as merchant
     user_store_id = None
     if role == "merchant":
         merchant = MerchantProfile.objects.filter(user=user).first()
@@ -98,13 +108,15 @@ def explore_all_stores(request):
             user_store_id = merchant.store.id
 
     context = {
-        "stores": stores,
+        "stores": page_obj,
         "query": query,
         "role": role,
         "user_store_id": user_store_id,
+        "page_obj": page_obj
     }
 
     return render(request, "explore.html", context)
+
 
 @login_required
 def merchant_setup_view(request):
@@ -203,54 +215,79 @@ from .models import MerchantProfile, CustomerProfile, Product
 
 
 
+from django.shortcuts import render, get_object_or_404
+from django.core.paginator import Paginator
+from django.utils.http import urlencode
+from .models import Store, Product, ProductImage, MerchantProfile
+
+from django.shortcuts import render, get_object_or_404
+from django.core.paginator import Paginator
+from django.utils.http import urlencode
+from .models import Store, Product, Category, MerchantProfile
+
 def storefront_by_slug(request, slug):
-    sample_stores = {
-        "handmade-creations": {
-            "store_name": "Handmade Creations",
-            "store_description": "Beautiful handcrafted gifts and decor.",
-            "products": [
-                {"name": "Bracelet", "description": "Beaded charm bracelet", "price": "15.00", "image": "https://via.placeholder.com/300", "category": "Accessories"},
-                {"name": "Notebook", "description": "Eco notebook", "price": "10.00", "image": "https://via.placeholder.com/300", "category": "Stationery"},
-                {"name": "Gift Box", "description": "Holiday gift box", "price": "25.00", "image": "https://via.placeholder.com/300", "category": "Gifts"},
-                {"name": "Mug", "description": "Handmade ceramic mug", "price": "12.00", "image": "https://via.placeholder.com/300", "category": "Homeware"},
-                {"name": "Planner", "description": "Weekly planner", "price": "9.99", "image": "https://via.placeholder.com/300", "category": "Stationery"},
-            ]
-        }
-    }
+    store = get_object_or_404(Store, slug=slug, is_store_active=True)
+    
+    # Get active products + related images
+    products_qs = Product.objects.filter(store=store, is_active=True).prefetch_related("images")
 
-    store = sample_stores.get(slug)
-    if not store:
-        return render(request, '404.html', status=404)
-
-    products = store["products"]
-    store_name = store["store_name"]
-    store_description = store["store_description"]
-
-    search_query = request.GET.get("search", "").lower()
-    category_filter = request.GET.get("category", "")
+    search_query = request.GET.get("search", "").strip().lower()
+    category_filter = request.GET.get("category", "").strip()
     page_number = request.GET.get("page", 1)
 
     if search_query:
-        products = [p for p in products if search_query in p["name"].lower() or search_query in p["description"].lower()]
-    if category_filter:
-        products = [p for p in products if p["category"] == category_filter]
+        products_qs = products_qs.filter(name__icontains=search_query)
 
-    categories = sorted(set(p["category"] for p in store["products"]))
-    paginator = Paginator(products, 6)
+    if category_filter:
+        products_qs = products_qs.filter(category__slug=category_filter)
+
+    # Get all categories used in this store's products
+    store_categories = Category.objects.filter(product__store=store).distinct()
+
+    paginator = Paginator(products_qs, 6)
     page_obj = paginator.get_page(page_number)
 
+    # Prepare role info
+    user = request.user if request.user.is_authenticated else None
+    role = getattr(user, 'role', None)
+    user_store_id = None
+    if role == "merchant":
+        merchant = MerchantProfile.objects.filter(user=user).first()
+        if merchant and merchant.store:
+            user_store_id = merchant.store.id
+
+    # Prepare product data with image URLs
+    product_list = []
+    for product in page_obj:
+        image_url = (
+            product.images.first().image.url
+            if product.images.exists()
+            else "/static/images/default-product.png"
+        )
+        product_list.append({
+            "id": product.id,
+            "name": product.name,
+            "price": product.price,
+            "stock": product.stock,
+            "description": product.description,
+            "image": image_url,
+        })
+
     context = {
-        "store_name": store_name,
-        "store_description": store_description,
-        "products": page_obj,
-        "categories": categories,
+        "store_name": store.name,
+        "store_description": store.description,
+        "products": page_obj,  # keep pagination context
+        "product_list": product_list,  # list for rendering image URLs
+        "categories": store_categories,
         "search_query": search_query,
         "selected_category": category_filter,
         "pagination_query": urlencode({"search": search_query, "category": category_filter}),
+        "role": role,
+        "user_store_id": user_store_id,
+        "store_id": store.id,
     }
 
     return render(request, "storefront.html", context)
-
 
 def register_view(request):
     if request.method == 'POST':
