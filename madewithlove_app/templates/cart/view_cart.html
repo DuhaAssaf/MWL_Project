@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}My Cart{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <h2 class="text-warning mb-4">My Cart 🛒</h2>
+
+  {% if cart_items %}
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Price</th>
+          <th>Quantity</th>
+          <th>Subtotal</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in cart_items %}
+        <tr>
+          <td>{{ item.product.name }}</td>
+          <td>${{ item.product.price }}</td>
+          <td>
+            <form method="POST" action="{% url 'update_cart_item' item.id %}" class="d-flex">
+              {% csrf_token %}
+              <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" class="form-control form-control-sm me-2" style="width: 80px;">
+              <button class="btn btn-sm btn-outline-secondary">Update</button>
+            </form>
+          </td>
+          <td>${{ item.product.price|floatformat:2|add:item.quantity|floatformat:2 }}</td>
+          <td>
+            <a href="{% url 'remove_cart_item' item.id %}" class="btn btn-sm btn-danger">Remove</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="text-end">
+      <h4 class="text-success">Total: ${{ total }}</h4>
+      <a href="#" class="btn btn-warning">Proceed to Checkout</a>
+    </div>
+  {% else %}
+    <p class="text-muted">Your cart is empty.</p>
+  {% endif %}
+</div>
+{% endblock %}
