@@ -19,7 +19,6 @@
 </head>
 
 <body>
-
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg bg-dark navbar-dark py-2">
     <div class="container">
@@ -33,7 +32,6 @@
         <ul class="navbar-nav">
           <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
 
-          <!-- Discover Dropdown -->
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               Discover
@@ -47,7 +45,7 @@
           {% if request.session.user_id %}
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="navbarUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <img src="{% if profile_picture_url %}{{ profile_picture_url }}{% else %}{% static 'images/default-profile.png' %}{% endif %}"
+                <img src="{{ request.session.profile_picture_url|default:'/static/images/default-profile.png' }}"
                      alt="Profile" width="32" height="32" class="rounded-circle" style="object-fit: cover;">
                 {{ request.session.username|default:"User" }}
               </a>
@@ -57,7 +55,6 @@
                   <li><a class="dropdown-item" href="{% url 'merchant_profile' %}">My Profile</a></li>
                 {% elif request.session.role == 'customer' %}
                   <li><a class="dropdown-item" href="{% url 'customer_dashboard' %}">Dashboard</a></li>
-                  <li><a class="dropdown-item" href="#">My Profile</a></li>
                 {% elif request.session.role == 'admin' %}
                   <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}">Admin Panel</a></li>
                 {% endif %}
@@ -74,6 +71,21 @@
     </div>
   </nav>
 
+  <!-- Welcome Banner -->
+  {% if request.session.user_id %}
+  <section class="bg-light py-3 border-bottom border-warning">
+    <div class="container text-center">
+      {% if request.session.role == 'merchant' %}
+        <h5 class="text-dark mb-0">👋 Welcome back, <strong>{{ request.session.username }}</strong>! Ready to manage your store?</h5>
+      {% elif request.session.role == 'customer' %}
+        <h5 class="text-dark mb-0">🛍️ Hello <strong>{{ request.session.username }}</strong>! Let's discover something new today.</h5>
+      {% elif request.session.role == 'admin' %}
+        <h5 class="text-dark mb-0">🛠️ Welcome Admin <strong>{{ request.session.username }}</strong>! Everything under control?</h5>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+
   <!-- Main Content -->
   <main class="container py-5">
     {% block content %}{% endblock %}
@@ -83,24 +95,37 @@
   <footer class="footer mt-auto py-5 text-light bg-dark">
     <div class="container">
       <div class="row gy-4">
-        <!-- About -->
         <div class="col-md-3">
           <h5 class="text-warning">Made With Love</h5>
-          <p class="small">A platform to launch stunning online stores with zero coding.</p>
+          <p class="small">
+            {% if request.session.user_id %}
+              {% if request.session.role == 'merchant' %}
+                Welcome back <strong>{{ request.session.username }}</strong>! 🚀 Manage your store and add amazing products.
+              {% elif request.session.role == 'customer' %}
+                Hello <strong>{{ request.session.username }}</strong>! 🛍️ Ready to explore and shop?
+              {% elif request.session.role == 'admin' %}
+                Greetings Admin <strong>{{ request.session.username }}</strong>! 🛠️ Access your control panel.
+              {% endif %}
+            {% else %}
+              A platform to launch stunning online stores with zero coding.
+            {% endif %}
+          </p>
         </div>
 
-        <!-- Quick Links -->
         <div class="col-md-3">
           <h6 class="text-warning">Quick Links</h6>
           <ul class="list-unstyled small">
             <li><a href="{% url 'home' %}" class="footer-link text-light">Home</a></li>
             <li><a href="{% url 'plans' %}" class="footer-link text-light">Plans</a></li>
-            <li><a href="{% url 'login' %}" class="footer-link text-light">Login</a> / <a href="{% url 'register' %}" class="footer-link text-light">Register</a></li>
-            <li><a href="{% url 'merchant_profile' %}" class="footer-link text-light">My Profile</a></li>
+            {% if not request.session.user_id %}
+              <li><a href="{% url 'login' %}" class="footer-link text-light">Login</a> / <a href="{% url 'register' %}" class="footer-link text-light">Register</a></li>
+            {% endif %}
+            {% if request.session.user_id and request.session.role == 'merchant' %}
+              <li><a href="{% url 'merchant_profile' %}" class="footer-link text-light">My Profile</a></li>
+            {% endif %}
           </ul>
         </div>
 
-        <!-- Newsletter -->
         <div class="col-md-3">
           <h6 class="text-warning">Stay Updated</h6>
           <form class="newsletter-form">
@@ -112,7 +137,6 @@
           </form>
         </div>
 
-        <!-- Contact & Social -->
         <div class="col-md-3">
           <h6 class="text-warning">Contact</h6>
           <p class="small mb-1">Email: hello@madewithlove.com</p>
