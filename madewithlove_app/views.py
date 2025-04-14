@@ -673,3 +673,29 @@ def view_cart(request):
         'cart_items': cart_items,
         'total': total
     })
+
+@login_required
+def update_cart_item(request, item_id):
+    if request.method == 'POST':
+        if request.user.role != 'customer':
+            return redirect('home')
+
+        cart_item = get_object_or_404(CartItem, id=item_id, customer__user=request.user)
+        quantity = int(request.POST.get('quantity', 1))
+
+        if quantity <= 0 or quantity > cart_item.product.stock:
+            messages.error(request, "Invalid quantity.")
+        else:
+            cart_item.quantity = quantity
+            cart_item.save()
+            messages.success(request, "Quantity updated.")
+
+    return redirect('view_cart')
+
+
+@login_required
+def remove_cart_item(request, item_id):
+    cart_item = get_object_or_404(CartItem, id=item_id, customer__user=request.user)
+    cart_item.delete()
+    messages.success(request, "Item removed from cart.")
+    return redirect('view_cart')
