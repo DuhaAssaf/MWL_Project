@@ -53,11 +53,14 @@
       <p class="text-muted">Storefront not yet published.</p>
     {% endif %}
   </div>
-  
+
   <div class="text-center mt-3">
     <a href="{% url 'storefront_by_slug' slug=profile.store.slug %}" class="btn btn-outline-light px-4 border-2">
       Visit My Storefront
     </a>
+  </div>
+  <div class="text-center mt-4">
+    <a href="{% url 'merchant_setup' %}" class="btn btn-warning px-4">Edit Profile</a>
   </div>
 </section>
 {% endblock %}
