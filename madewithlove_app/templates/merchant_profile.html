@@ -5,45 +5,59 @@
 
 {% block content %}
 <section class="container py-5">
-    <div class="text-center mb-5">
-    <h2 class="fw-bold">My Merchant Profile</h2>
-    <p class="text-muted">Review your account setup and payout info.</p>
-    </div>
+  <div class="text-center mb-5">
+    <h2 class="fw-bold text-warning">My Merchant Profile</h2>
+    <p class="text-muted">Review your store setup and payout information.</p>
+  </div>
 
-    <div class="row g-4 justify-content-center">
+  <div class="row g-4 justify-content-center">
     <!-- Store Info -->
     <div class="col-md-6">
-        <div class="card p-4 profile-card">
-        <h5 class="mb-3 text-primary">🛍️ Store Info</h5>
-        <p><strong>Store Name:</strong> {{ profile.store_name }}</p>
-        <p><strong>Category:</strong> {{ profile.category }}</p>
-        <p><strong>Description:</strong> {{ profile.bio }}</p>
-        </div>
+      <div class="card p-4 shadow-lg border-0" style="background-color: #003f5c; color: #fbf2c4;">
+        <h5 class="mb-3" style="color: #ffa600;">🛍️ Store Info</h5>
+        <p><strong>Store Name:</strong> {{ profile.store.name }}</p>
+        <p><strong>Category:</strong> {{ profile.store.category }}</p>
+        <p><strong>Description:</strong><br>{{ profile.store.description }}</p>
+        {% if profile.store.store_logo %}
+          <div class="mt-3">
+            <img src="{{ profile.store.store_logo.url }}" alt="Store Logo" class="img-fluid rounded shadow" style="max-height: 120px;">
+          </div>
+        {% endif %}
+      </div>
     </div>
 
     <!-- Payout Info -->
     <div class="col-md-6">
-        <div class="card p-4 profile-card">
-        <h5 class="mb-3 text-primary">💸 Payout Details</h5>
-        <p><strong>Method:</strong> {{ profile.payment_provider }}</p>
+      <div class="card p-4 shadow-lg border-0" style="background-color: #003f5c; color: #fbf2c4;">
+        <h5 class="mb-3" style="color: #ffa600;">💸 Payout Details</h5>
+        <p><strong>Method:</strong> {{ profile.payout_method }}</p>
         <p><strong>Email / Account:</strong> {{ profile.payout_email }}</p>
         <p><strong>Country:</strong> {{ profile.country }}</p>
-        <p><strong>Uploaded ID:</strong><br>
-            <img src="{{ profile.id_upload.url|default:'https://via.placeholder.com/200x120' }}" 
-            alt="Uploaded ID" 
-            class="img-fluid rounded mt-2" />
-        </p>
-        </div>
-    </div>
-    </div>
 
-    <div class="text-center mt-4">
-    <a href="{% url 'merchant_setup' %}" class="btn btn-warning px-4">Edit Profile</a>
+        {% if profile.profile_picture %}
+        <div class="mt-3">
+          <p><strong>Profile Picture:</strong></p>
+          <img src="{{ profile.profile_picture.url }}" alt="Profile Pic" class="img-fluid rounded" style="max-height: 120px;">
+        </div>
+        {% endif %}
+      </div>
     </div>
-    <div class="text-center mt-3">
-    <a href="{% url 'storefront_by_slug' slug='handmade-creations' %}" class="btn btn-outline-primary px-4">
-    Visit My Storefront
+  </div>
+
+  <div class="text-center mt-3">
+    {% if store_link %}
+      <a href="{{ store_link }}" class="btn btn-outline-light px-4 border-2">
+        Visit My Storefront
+      </a>
+    {% else %}
+      <p class="text-muted">Storefront not yet published.</p>
+    {% endif %}
+  </div>
+  
+  <div class="text-center mt-3">
+    <a href="{% url 'storefront_by_slug' slug=profile.store.slug %}" class="btn btn-outline-light px-4 border-2">
+      Visit My Storefront
     </a>
-</div>
+  </div>
 </section>
 {% endblock %}
