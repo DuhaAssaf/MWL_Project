@@ -41,6 +41,9 @@
             <ul class="dropdown-menu dropdown-menu-dark">
               <li><a class="dropdown-item" href="{% url 'plans' %}">Plans</a></li>
               <li><a class="dropdown-item" href="{% url 'explore' %}">Explore Stores</a></li>
+              <li><a class="dropdown-item" href="{% url 'about' %}">About</a></li>
+              <li><a class="dropdown-item" href="{% url 'contact' %}">Contact</a></li>
+
             </ul>
           </li>
 
@@ -75,7 +78,8 @@
   </nav>
 
   <!-- Main Content -->
-  <main class="container py-5">
+  <main class="container py-5"
+  >
     {% block content %}{% endblock %}
   </main>
 

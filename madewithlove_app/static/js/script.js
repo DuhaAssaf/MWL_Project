@@ -201,4 +201,43 @@ document.addEventListener("DOMContentLoaded", function () {
   extractInitialProducts();
   updateCategoryDropdown();
   applyFilters();
-});
+
+  // contact form AJAX submit
+  const contactForm = document.getElementById("contactForm");
+  const contactResponse = document.getElementById("contactResponse");
+
+  if (contactForm) {
+    contactForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(contactForm);
+
+      fetch(contactForm.action, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": formData.get("csrfmiddlewaretoken")
+        },
+        body: formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.message) {
+            contactResponse.innerHTML = `
+              <div class="alert alert-success">${data.message}</div>
+            `;
+            showToast(data.message, true);
+            contactForm.reset();
+          } else {
+            throw new Error(data.error || "Something went wrong.");
+          }
+        })
+        .catch(err => {
+          contactResponse.innerHTML = `
+            <div class="alert alert-danger">${err.message}</div>
+          `;
+          showToast(err.message, false);
+        });
+    });
+  }
+
+}); 

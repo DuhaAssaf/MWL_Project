@@ -1,4 +1,5 @@
 import bcrypt
+import random
 from django.shortcuts import redirect, render
 from django.db import IntegrityError
 from django.http import HttpResponse, JsonResponse
@@ -8,15 +9,19 @@ from .models import ProductImage, User, MerchantProfile, CustomerProfile, Subscr
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
+from .models import Contact
 
+from django.core.mail import send_mail
+from django.contrib import messages
+from .forms import ContactForm
 def homepage(request):
     return render(request, 'homepage.html')
 
 def plans(request):
     plans = [
-        {"name": "Basic", "price": "1", "features": ["1 Store", "10 Products", "Basic Support"], "cta": "Get Started"},
-        {"name": "Pro", "price": "6", "features": ["3 Stores", "50 Products", "Priority Support"], "cta": "Choose Pro"},
-        {"name": "Premium", "price": "12", "features": ["Unlimited Stores", "Unlimited Products", "24/7 Premium Support"], "cta": "Go Premium"},
+        {"name": "Basic", "price": "10", "features": ["1 Store", "10 Products", "Basic Support"], "cta": "Get Started"},
+        {"name": "Pro", "price": "20", "features": ["3 Stores", "50 Products", "Priority Support"], "cta": "Choose Pro"},
+        {"name": "Premium", "price": "30", "features": ["Unlimited Stores", "Unlimited Products", "24/7 Premium Support"], "cta": "Go Premium"},
     ]
     return render(request, 'plans.html', {"plans": plans})
 
@@ -366,5 +371,50 @@ def subscribe_view(request):
         number = request.POST.get('card_number')
         expiry = request.POST.get('expiry_date')
         cvv = request.POST.get('cvv')
-        return render(request, 'success.html', {'plan': plan})
+        confirmation_code = random.randint(1000, 9999)
+
+        return render(request, 'success.html', {'plan': plan,
+        'confirmation_code': confirmation_code})
+
     return render(request, 'subscribe.html', {'plan': plan, 'price': price})
+
+
+
+# def contact(request):
+#     form = ContactForm()
+
+#     if request.method == 'POST':
+#         form = ContactForm(request.POST)
+#         if form.is_valid():
+#             contact = form.save()
+#             send_mail(
+#                 f"New Message from {contact.name}",
+#                 contact.message,
+#                 contact.email,
+#                 ['your@email.com'], 
+#                 fail_silently=False,
+#             )
+#             messages.success(request, "Message sent successfully!")
+#             form = ContactForm() 
+
+#     return render(request, 'contact.html', {'form': form})
+
+
+#the right code 
+
+def ajax_contact_view(request):
+    if request.method == "POST":
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            contact = form.save()
+            send_mail(
+                f"New Contact Form Submission from {contact.name}",
+                contact.message,
+                contact.email,
+                ['nicole1912moughrabi@gmail.com'],
+                fail_silently=False,
+            )
+            return JsonResponse({'success': True, 'message': 'Your message has been sent successfully'})
+        else:
+            return JsonResponse({'success': False, 'error': 'Please fill in the feilds correctly'})
+    return JsonResponse({'success': False, 'error': 'Only the request must be post'})

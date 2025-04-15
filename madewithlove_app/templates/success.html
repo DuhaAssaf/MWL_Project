@@ -7,7 +7,22 @@
     <div class="container">
         <h2 class="text-success fw-bold mb-3">Subscription Successful!</h2>
         <p class="lead">You have successfully subscribed to the <strong>{{ plan }}</strong> plan.</p>
-        <a href="/" class="btn btn-outline-primary mt-4">Back to Home</a>
+        {% comment %} <p class="mb-3">Confirmation Code: <strong>#MWL-{{ confirmation_code }}</strong></p> {% endcomment %}
+        <p class="text-muted">You will be redirected to the home page in <span id="countdown">5</span> seconds...</p>
+        <a href="/" class="btn btn-outline-primary mt-4">Go to Home Now</a>
     </div>
 </section>
+
+<script>
+    let seconds = 10;
+    const countdownElement = document.getElementById('countdown');
+    const interval = setInterval(() => {
+        seconds--;
+        countdownElement.textContent = seconds;
+        if (seconds === 0) {
+            clearInterval(interval);
+            window.location.href = "/";
+        }
+    }, 1000);
+</script>
 {% endblock %}

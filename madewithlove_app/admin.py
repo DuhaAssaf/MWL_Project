@@ -1,6 +1,7 @@
 from django.contrib import admin
+from .models import Contact
 from .models import (
-    User, MerchantProfile, CustomerProfile, Store,
+    Contact, User, MerchantProfile, CustomerProfile, Store,
     Product, ProductImage, Category, Order, OrderItem,
     Review, Notification, Discount, Subscription, RecentlyViewedProduct
 )
@@ -78,7 +79,7 @@ class DiscountAdmin(admin.ModelAdmin):
 class SubscriptionAdmin(admin.ModelAdmin):
     list_display = ('user', 'plan_name', 'is_active', 'start_date', 'end_date')
     list_filter = ('is_active', 'plan_name')
-
+    
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -90,3 +91,12 @@ class CategoryAdmin(admin.ModelAdmin):
 class RecentlyViewedProductAdmin(admin.ModelAdmin):
     list_display = ('customer', 'product', 'viewed_at')
     search_fields = ('customer__user__username', 'product__name')
+
+
+
+@admin.register(Contact)
+class ContactAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'submitted_at')
+# @admin.register(Contact)
+# class ContactAdmin(admin.ModelAdmin):
+#     list_display = ('name', 'email', 'message', 'submitted_at')
