@@ -14,6 +14,8 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 from django.db.models import Prefetch
+from django.contrib import messages
+from django.urls import reverse
 
 
 def generate_unique_slug(base_name):
@@ -24,6 +26,23 @@ def generate_unique_slug(base_name):
         unique_slug = f"{slug}-{num}"
         num += 1
     return unique_slug
+
+def merchant_profile_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if request.user.is_authenticated and request.user.role == 'merchant':
+            profile_exists = MerchantProfile.objects.filter(user=request.user).exists()
+            if not profile_exists:
+                return redirect('create_merchant_profile')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+def customer_profile_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if request.user.role == 'customer':
+            if not CustomerProfile.objects.filter(user=request.user).exists():
+                return redirect('create_customer_profile')
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 def homepage(request):
     return render(request, 'homepage.html')
@@ -199,17 +218,26 @@ def contact(request):
 def auth_page(request):
     return render(request, 'auth.html')
 
-def merchant_profile_page(request):
-    profile = {
-        "store_name": "Handmade Creations",
-        "category": "Crafts",
-        "bio": "Beautiful handmade items for gifting and home decor.",
-        "payment_provider": "PayPal",
-        "payout_email": "merchant@example.com",
-        "country": "Jordan",
-        "id_upload": {"url": "https://via.placeholder.com/200x120"},
-    }
-    return render(request, 'merchant_profile.html', {"profile": profile})
+
+@login_required
+@merchant_profile_required
+def merchant_profile_view(request):
+    if request.user.role != 'merchant':
+        messages.error(request, "Access denied. Only merchants can view this page.")
+        return redirect('home')
+
+    profile = get_object_or_404(MerchantProfile, user=request.user)
+
+    store = profile.store
+    store_link = None
+    if store and store.slug:
+        store_link = reverse('storefront_by_slug', kwargs={'slug': store.slug})
+
+    return render(request, 'merchant_profile.html', {
+        'profile': profile,
+        'store_link': store_link
+    })
+
 
 from django.shortcuts import render, redirect
 from .models import MerchantProfile, CustomerProfile, Product
@@ -548,22 +576,4 @@ def get_merchant_products(request):
         })
 
     return JsonResponse({'success': True, 'products': data})
-
-def merchant_profile_required(view_func):
-    def wrapper(request, *args, **kwargs):
-        if request.user.is_authenticated and request.user.role == 'merchant':
-            profile_exists = MerchantProfile.objects.filter(user=request.user).exists()
-            if not profile_exists:
-                return redirect('create_merchant_profile')
-        return view_func(request, *args, **kwargs)
-    return wrapper
-
-def customer_profile_required(view_func):
-    def wrapper(request, *args, **kwargs):
-        if request.user.role == 'customer':
-            if not CustomerProfile.objects.filter(user=request.user).exists():
-                return redirect('create_customer_profile')
-        return view_func(request, *args, **kwargs)
-    return wrapper
-
 
