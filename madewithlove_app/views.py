@@ -227,17 +227,28 @@ def merchant_profile_view(request):
         return redirect('home')
 
     profile = get_object_or_404(MerchantProfile, user=request.user)
-
     store = profile.store
+
     store_link = None
-    if store and store.slug:
-        store_link = reverse('storefront_by_slug', kwargs={'slug': store.slug})
+    product_stats = {}
+
+    if store:
+        if store.slug:
+            store_link = reverse('storefront_by_slug', kwargs={'slug': store.slug})
+
+        products = store.product.all()
+        product_stats = {
+            'total': products.count(),
+            'in_stock': sum(p.stock for p in products),
+            'active': products.filter(is_active=True).count(),
+            'inactive': products.filter(is_active=False).count(),
+        }
 
     return render(request, 'merchant_profile.html', {
         'profile': profile,
-        'store_link': store_link
+        'store_link': store_link,
+        'product_stats': product_stats,
     })
-
 
 from django.shortcuts import render, redirect
 from .models import MerchantProfile, CustomerProfile, Product
