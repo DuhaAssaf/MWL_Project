@@ -44,6 +44,18 @@
     </div>
   </div>
 
+  <!-- Store Stats -->
+<div class="col-md-6">
+    <div class="card p-4 shadow-lg border-0" style="background-color: #003f5c; color: #fbf2c4;">
+      <h5 class="mb-3" style="color: #ffa600;">📦 Store Stats</h5>
+      <p><strong>Total Products:</strong> {{ product_stats.total }}</p>
+      <p><strong>Products in Stock:</strong> {{ product_stats.in_stock }}</p>
+      <p><strong>Active:</strong> {{ product_stats.active }}</p>
+      <p><strong>Inactive:</strong> {{ product_stats.inactive }}</p>
+    </div>
+  </div>
+  
+
   <div class="text-center mt-3">
     {% if store_link %}
       <a href="{{ store_link }}" class="btn btn-outline-light px-4 border-2">
