@@ -54,7 +54,15 @@
       <p><strong>Inactive:</strong> {{ product_stats.inactive }}</p>
     </div>
   </div>
-  
+
+<!-- Add a <canvas> element for the chart -->
+  <div class="col-md-12">
+    <div class="card p-4 mt-4 shadow-lg border-0" style="background-color: #003f5c;">
+      <h5 class="mb-3 text-warning">📊 Store Overview</h5>
+      <canvas id="productStatsChart" height="100"></canvas>
+    </div>
+  </div>
+    
 
   <div class="text-center mt-3">
     {% if store_link %}
