@@ -549,4 +549,21 @@ def get_merchant_products(request):
 
     return JsonResponse({'success': True, 'products': data})
 
+def merchant_profile_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if request.user.is_authenticated and request.user.role == 'merchant':
+            profile_exists = MerchantProfile.objects.filter(user=request.user).exists()
+            if not profile_exists:
+                return redirect('create_merchant_profile')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+def customer_profile_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if request.user.role == 'customer':
+            if not CustomerProfile.objects.filter(user=request.user).exists():
+                return redirect('create_customer_profile')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
 

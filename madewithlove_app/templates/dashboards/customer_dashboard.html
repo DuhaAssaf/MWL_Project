@@ -1,6 +1,23 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% block title %}Customer Profile Setup{% endblock %}
+
 {% block content %}
-<h2>Customer Dashboard</h2>
-<p>Welcome, {{ profile.user.username }}!</p>
-<p>Wishlist Items: {{ wishlist|length }}</p>
+<div class="container my-5">
+  <h2 class="text-warning mb-4">Complete Your Customer Profile</h2>
+  <form method="POST" enctype="multipart/form-data" class="card p-4 shadow">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label for="address" class="form-label">Address</label>
+      <textarea name="address" id="address" class="form-control" rows="3" required></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label for="profile_picture" class="form-label">Profile Picture (optional)</label>
+      <input type="file" name="profile_picture" id="profile_picture" class="form-control">
+    </div>
+
+    <button type="submit" class="btn btn-warning">Save Profile</button>
+  </form>
+</div>
 {% endblock %}

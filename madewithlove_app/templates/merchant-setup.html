@@ -87,14 +87,14 @@
       <div class="mb-4">
         <label class="form-label">Payout Method (Optional)</label>
         <input type="text" name="payout_method" class="form-control"
-               value="{% if request.POST.payout_method %}{{ request.POST.payout_method }}{% else %}{{ profile.payout_method }}{% endif %}">
+              value="{% if request.POST.payout_method %}{{ request.POST.payout_method }}{% else %}{{ profile.payout_method }}{% endif %}">
       </div>
 
       <!-- Payout Email -->
       <div class="mb-4">
         <label class="form-label">Payout Email</label>
         <input type="email" name="payout_email" class="form-control" required
-               value="{% if request.POST.payout_email %}{{ request.POST.payout_email }}{% else %}{{ profile.payout_email }}{% endif %}">
+              value="{% if request.POST.payout_email %}{{ request.POST.payout_email }}{% else %}{{ profile.payout_email }}{% endif %}">
       </div>
 
       <!-- Country -->
