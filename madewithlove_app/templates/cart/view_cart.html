@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% block title %}My Cart{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <h2 class="text-warning mb-4 text-center fw-bold" style="font-size: 2.2rem;">My Cart 🛒</h2>
+
+  {% if grouped_cart %}
+    {% for store, store_data in grouped_cart.items %}
+      {% with items=store_data.items store_total=store_data.total %}
+      <div class="card mb-5 shadow-sm">
+        <div class="card-header bg-dark text-white text-center">
+          <h4 class="w-100 text-uppercase fw-bold d-flex justify-content-center align-items-center gap-2 mb-0" style="font-size: 1.4rem;">
+            {% if store.store_logo %}
+              <img src="{{ store.store_logo.url }}" alt="Logo" width="36" height="36" class="rounded-circle shadow-sm" style="object-fit: cover;">
+            {% endif %}
+            {{ store.name }}
+          </h4>
+        </div>
+
+        <div class="card-body p-0">
+          <table class="table mb-0 align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Subtotal</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in items %}
+              <tr>
+                <td class="d-flex align-items-center gap-2">
+                  {% if item.product.images.all %}
+                    <img src="{{ item.product.images.first.image.url }}" alt="Product Image" width="50" height="50" class="rounded" style="object-fit: cover;">
+                  {% else %}
+                    <img src="/static/images/default-product.png" alt="Product Image" width="50" height="50" class="rounded">
+                  {% endif %}
+                  {{ item.product.name }}
+                </td>
+                <td>${{ item.product.price }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>${{ item.subtotal|floatformat:2 }}</td>
+                <td>
+                  <!-- Delete Trigger -->
+                  <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteItemModal{{ item.id }}">
+                    Delete
+                  </button>
+
+                  <!-- Delete Modal -->
+                  <div class="modal fade" id="deleteItemModal{{ item.id }}" tabindex="-1" aria-labelledby="deleteItemModalLabel{{ item.id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                      <div class="modal-content bg-dark text-white">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="deleteItemModalLabel{{ item.id }}">Remove Item</h5>
+                          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="post" action="{% url 'remove_cart_item' item.id %}">
+                          {% csrf_token %}
+                          <div class="modal-body">
+                            <p>You're about to remove <strong>{{ item.product.name }}</strong> from your cart.</p>
+                            <div class="mb-3">
+                              <label for="quantity{{ item.id }}" class="form-label">Quantity to remove:</label>
+                              <input type="number" name="quantity" id="quantity{{ item.id }}" class="form-control" value="{{ item.quantity }}" min="1" max="{{ item.quantity }}" required>
+                            </div>
+                            <p class="text-warning small">This will return the quantity to the product's stock.</p>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot class="table-light">
+              <tr>
+                <td colspan="3" class="text-end fw-bold"></td>
+                <td colspan="2" class="fw-bold text-success">${{ store_total|floatformat:2 }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Centered & Wider Buttons -->
+        <div class="d-flex justify-content-center align-items-center gap-4 py-3">
+          <button class="btn btn-outline-primary btn-lg w-25" data-bs-toggle="modal" data-bs-target="#contactModal{{ store.id }}">
+            Contact Seller
+          </button>
+          <a href="{% url 'download_cart_pdf' store.id %}" class="btn btn-lg btn-outline-dark w-25">
+            Download PDF
+          </a>
+        </div>
+      </div>
+
+      <!-- Contact Seller Modal -->
+      <div class="modal fade" id="contactModal{{ store.id }}" tabindex="-1" aria-labelledby="contactModalLabel{{ store.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+              <h5 class="modal-title" id="contactModalLabel{{ store.id }}">Message to {{ store.name }}</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'contact_merchant' store.id %}">
+              {% csrf_token %}
+              <div class="modal-body">
+                <textarea name="message" class="form-control" rows="4" placeholder="Write your message..."></textarea>
+              </div>
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-warning">Send</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endwith %}
+    {% endfor %}
+
+    <!-- Grand Total & Start New Order -->
+    <div class="text-center mt-4">
+      <h4 class="text-success mb-3">Total: ${{ total|floatformat:2 }}</h4>
+      <button class="btn btn-danger btn-lg px-5" data-bs-toggle="modal" data-bs-target="#confirmNewOrderModal">
+        Start a New Order
+      </button>
+
+      <!-- Confirmation Modal -->
+      <div class="modal fade" id="confirmNewOrderModal" tabindex="-1" aria-labelledby="confirmNewOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+              <h5 class="modal-title" id="confirmNewOrderModalLabel">Confirm Action</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>This will <strong>empty your cart</strong> and start a new order. Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <form method="post" action="{% url 'clear_cart' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Yes, Proceed</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="text-center">
+      <p class="lead">Your cart is empty.</p>
+      <a href="{% url 'explore' %}" class="btn btn-warning btn-lg mt-2">Start Shopping</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

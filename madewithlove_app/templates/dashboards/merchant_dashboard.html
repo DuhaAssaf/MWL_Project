@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container my-4">
+
+  <!-- Store Info -->
+  <div class="card dashboard-card shadow-sm mb-4 border-0">
+    <div class="row g-0">
+      <div class="col-md-4">
+        {% if store_missing %}
+          <div class="alert alert-warning m-3">You haven't set up your store yet. Please complete your profile.</div>
+        {% endif %}
+        <img src="{% if store.store_logo %}{{ store.store_logo.url }}{% else %}{% static 'images/default-store.png' %}{% endif %}" class="img-fluid rounded-start" alt="Store Logo">
+      </div>
+      <div class="col-md-8">
+        <div class="card-body">
+          <h5 class="card-title dashboard-welcome">{{ store.name }}</h5>
+          <p class="card-text mb-1"><strong>Category:</strong> {{ profile.store.category|default:"N/A" }}</p>
+          <p class="card-text mb-1"><strong>Country:</strong> {{ profile.country|default:"N/A" }}</p>
+          <p class="card-text"><strong>Status:</strong> <span class="badge bg-success">Active</span></p>
+          <p class="card-text text-muted small">Manage your store, add products, and track performance below.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Table -->
+  <div class="table-responsive">
+    <div class="text-end mb-3">
+      <button class="btn add-product-btn" data-bs-toggle="modal" data-bs-target="#productModal" onclick="openAddModal()">Add Product</button>
+    </div>
+    <table class="table dashboard-table table-bordered align-middle">
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="product-table">
+        {% for product in products %}
+        <tr data-name="{{ product.name }}" data-category="{{ product.category }}" data-id="{{ product.id }}">
+          <td>
+            {% for img in product.images.all %}
+              <img src="{{ img.image.url }}" width="50" class="img-thumbnail me-1" />
+            {% empty %}
+              <img src="{% static 'images/default-product.png' %}" width="50" class="img-thumbnail" />
+            {% endfor %}
+          </td>
+          <td>{{ product.name }}</td>
+          <td>{{ product.category }}</td>
+          <td>${{ product.price }}</td>
+          <td>{{ product.stock }}</td>
+          <td>
+            <button class="btn btn-sm btn-warning edit-btn" data-id="{{ product.id }}">Edit</button>
+            <button class="btn btn-sm btn-danger delete-btn" data-id="{{ product.id }}">Delete</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <p id="pagination-info" class="text-muted text-end"></p>
+    <div class="d-flex justify-content-between">
+      <button id="prev-page" class="btn btn-outline-light">Previous</button>
+      <button id="next-page" class="btn btn-outline-light">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- Product Modal -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content dashboard-modal">
+      <form id="product-form" method="post" enctype="multipart/form-data" action="{% url 'add_product' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="productModalLabel">Add/Edit Product</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body row g-3">
+          <input type="hidden" name="product_id" id="edit-product-id">
+
+          <div class="col-md-6">
+            <label for="product-name" class="form-label">Product Name</label>
+            <input type="text" name="name" id="product-name" class="form-control" required>
+          </div>
+
+          <div class="col-md-6">
+            <label for="product-price" class="form-label">Price ($)</label>
+            <input type="number" name="price" step="0.01" id="product-price" class="form-control" required min="0">
+          </div>
+
+          <div class="col-md-6">
+            <label for="product-stock" class="form-label">Stock</label>
+            <input type="number" name="stock" id="product-stock" class="form-control" required min="0">
+          </div>
+
+          <div class="col-12">
+            <label for="product-description" class="form-label">Description</label>
+            <textarea name="description" id="product-description" class="form-control" rows="3" required></textarea>
+          </div>
+
+          <div class="col-12">
+            <label for="product-image" class="form-label">Product Images</label>
+            <input type="file" name="images" id="product-image" class="form-control" multiple>
+            <img id="image-preview" class="mt-2" style="max-width: 100px; display: none;" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn save-product-btn">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/script.js' %}"></script>
+<script>
+  function openAddModal() {
+    document.getElementById("productModalLabel").textContent = "Add Product";
+    document.getElementById("product-form").reset();
+    document.getElementById("edit-product-id").value = "";
+    document.getElementById("image-preview").style.display = "none";
+  }
+</script>
+{% endblock %}

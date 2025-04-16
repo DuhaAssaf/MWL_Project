@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Contact Us | Made With Love{% endblock %}
+
+{% block content %}
+<section class="py-5">
+  <div class="container">
+    <h2 class="text-center fw-bold text-warning mb-4">Contact Us</h2>
+
+
+    <!-- Contact Form -->
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+            <!-- Response Message Area -->
+    <div id="contactResponse" class="text-center mb-4"></div>
+
+        <form id="contactForm" method="POST" action="{% url 'ajax_contact' %}" class="auth-card p-4 rounded shadow-sm">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label text-warning">Your Name</label>
+            <input type="text" name="name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-warning">Your Email</label>
+            <input type="email" name="email" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-warning">Message</label>
+            <textarea name="message" rows="5" class="form-control" required></textarea>
+          </div>
+          <button type="submit" class="btn auth-btn w-100">Send Message</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/script.js' %}"></script>
+{% endblock %}

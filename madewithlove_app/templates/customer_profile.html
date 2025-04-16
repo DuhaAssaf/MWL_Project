@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile | Made With Love{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+  <div class="text-center mb-5">
+    <h2 class="fw-bold text-warning">Customer Profile</h2>
+    <p class="text-muted">Manage your account, track orders, and view your activity.</p>
+  </div>
+
+  <div class="row row-cols-1 row-cols-md-2 g-4">
+
+    <!-- Personal Info -->
+    <div class="col">
+      <div class="card profile-card h-100">
+        <div class="card-body">
+          <h5 class="section-heading">👤 Personal Information</h5>
+          <hr>
+          <p><strong>Full Name:</strong> {{ customer.user.full_name }}</p>
+          <p><strong>Username:</strong> {{ customer.user.username }}</p>
+          <p><strong>Email:</strong> {{ customer.user.email }}</p>
+          <p><strong>Phone:</strong> {{ customer.user.phone_number }}</p>
+          <p><strong>Joined:</strong> {{ customer.joined_at|date:"F d, Y" }}</p>
+          {% if customer.profile_picture %}
+          <div class="text-center mt-3">
+            <img src="{{ customer.profile_picture.url }}" alt="Profile Picture" class="img-fluid rounded-circle shadow-sm" style="max-height: 80px;">
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Address Info -->
+    <div class="col">
+      <div class="card profile-card h-100">
+        <div class="card-body">
+          <h5 class="section-heading">🏠 Address</h5>
+          <hr>
+          <p>{{ customer.address|default:"No address added." }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Orders Summary -->
+    <div class="col">
+      <div class="card profile-card h-100">
+        <div class="card-body">
+          <h5 class="section-heading">📦 Order Summary</h5>
+          <hr>
+          <ul class="list-unstyled">
+            <li><strong>Total Orders:</strong> {{ order_stats.total }}</li>
+            <li><strong>Completed:</strong> {{ order_stats.delivered }}</li>
+            <li><strong>Pending:</strong> {{ order_stats.pending }}</li>
+            <li><strong>Cancelled:</strong> {{ order_stats.cancelled }}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recently Viewed -->
+    <div class="col">
+      <div class="card profile-card h-100">
+        <div class="card-body">
+          <h5 class="section-heading">🕵️ Recently Viewed</h5>
+          <hr>
+          {% if recent_products %}
+            <ul class="list-unstyled">
+              {% for item in recent_products %}
+              <li class="mb-2">{{ item.product.name }} ({{ item.viewed_at|timesince }} ago)</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">No recent activity.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Actions -->
+  <div class="text-center mt-4">
+    <a href="{% url 'edit_customer_profile' %}" class="btn btn-warning me-3 px-4">Edit Profile</a>
+    <a href="{% url 'customer_dashboard' %}" class="btn btn-outline-light px-4">Go to Dashboard</a>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/customer_profile.css' %}">
+{% endblock %}
